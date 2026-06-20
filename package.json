@@ -2,7 +2,7 @@
   "name": "albert",
   "displayName": "Albert",
   "description": "API testing in plain JSON files checked into your repo: requests, environments, k6-powered flows and load sims, Allure reporting, and a CLI for CI.",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0",
   "publisher": "g-akrp",
   "preview": true,
   "icon": "icon.png",
