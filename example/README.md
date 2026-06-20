@@ -25,7 +25,7 @@ example/
 Needs podman or docker. From the repo root:
 
 ```bash
-podman-compose -f example/wiremock/compose.yml up      # or: docker compose -f example/wiremock/compose.yml up
+podman compose -f example/wiremock/compose.yml up      # or: docker compose -f example/wiremock/compose.yml up
 ```
 
 It serves `http://localhost:8080` with these endpoints:

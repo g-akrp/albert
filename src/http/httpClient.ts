@@ -177,9 +177,15 @@ export function resolveRequestPreview(
   request: RequestDetails,
   variables: KeyValueEntry[]
 ): { method: string; url: string; headers: Record<string, string>; body?: string } {
-  const { url, headers } = buildUrlAndHeaders(request, variables);
   const body = buildBody(request.body, variables);
-  return { method: request.method, url, headers, body };
+  // A new/empty or malformed endpoint makes `new URL(...)` throw; degrade to a best-effort preview
+  // instead of crashing (this runs in webview message handlers, where a throw is an unhandled rejection).
+  try {
+    const { url, headers } = buildUrlAndHeaders(request, variables);
+    return { method: request.method, url, headers, body };
+  } catch {
+    return { method: request.method, url: rawUrlString(request, variables), headers: headersOnly(request, variables), body };
+  }
 }
 
 /** Full block-style breakdown of a request with variables resolved — used for the Preview tab and
@@ -191,14 +197,27 @@ export function resolveRequestForDisplay(
   const endpoint = resolveVariables(request.endpoint, variables).replace(/\/+$/, '');
   const rawPath = resolveVariables(request.path, variables);
   const path = rawPath ? (rawPath.startsWith('/') ? rawPath : `/${rawPath}`) : '';
-  const { url, headers } = buildUrlAndHeaders(request, variables);
 
-  // Read the query block back off the final URL rather than re-deriving it from request.query —
-  // that list misses params already present in the endpoint's own query string, and (more
-  // importantly) an api-key auth configured to land "in: query" is added straight onto the URL
-  // by applyAuth() inside buildUrlAndHeaders(), never into request.query. Recomputing from
-  // request.query alone showed a URL with the key in it but a Query section without it.
-  const query = Array.from(new URL(url).searchParams.entries()).map(([key, value]) => ({ key, value }));
+  let url: string;
+  let headers: Record<string, string>;
+  let query: { key: string; value: string }[];
+  try {
+    ({ url, headers } = buildUrlAndHeaders(request, variables));
+    // Read the query block back off the final URL rather than re-deriving it from request.query —
+    // that list misses params already present in the endpoint's own query string, and (more
+    // importantly) an api-key auth configured to land "in: query" is added straight onto the URL
+    // by applyAuth() inside buildUrlAndHeaders(), never into request.query. Recomputing from
+    // request.query alone showed a URL with the key in it but a Query section without it.
+    query = Array.from(new URL(url).searchParams.entries()).map(([key, value]) => ({ key, value }));
+  } catch {
+    // Empty/malformed endpoint (e.g. a brand-new request): degrade gracefully instead of throwing.
+    url = endpoint + path;
+    headers = headersOnly(request, variables);
+    query = enabledQueryEntries(request.query).map((q) => ({
+      key: resolveVariables(q.key, variables),
+      value: resolveVariables(q.value, variables),
+    }));
+  }
 
   return {
     method: request.method,
@@ -210,6 +229,30 @@ export function resolveRequestForDisplay(
     body: { mode: request.body.mode, content: buildBody(request.body, variables) ?? '' },
     auth: { type: request.auth.type, summary: summarizeAuth(request.auth, variables) },
   };
+}
+
+/** Best-effort headers (no URL needed) for degraded previews of requests with an invalid endpoint. */
+function headersOnly(request: RequestDetails, variables: KeyValueEntry[]): Record<string, string> {
+  const headers: Record<string, string> = {};
+  for (const header of enabledEntries(request.headers)) {
+    headers[resolveVariables(header.name, variables)] = resolveVariables(header.value, variables);
+  }
+  applyDefaultContentType(request.method, request.body.mode, headers);
+  // A throwaway valid URL lets applyAuth() set Authorization (or an api-key-in-query, harmlessly discarded).
+  try {
+    applyAuth(request.auth, variables, headers, new URL('http://localhost'));
+  } catch {
+    // ignore — auth is cosmetic in the degraded preview
+  }
+  return headers;
+}
+
+/** The raw endpoint+path string for a degraded preview, without URL normalization. */
+function rawUrlString(request: RequestDetails, variables: KeyValueEntry[]): string {
+  const endpoint = resolveVariables(request.endpoint, variables).replace(/\/+$/, '');
+  const rawPath = resolveVariables(request.path, variables);
+  const path = rawPath ? (rawPath.startsWith('/') ? rawPath : `/${rawPath}`) : '';
+  return endpoint + path;
 }
 
 function summarizeAuth(auth: AuthConfig, variables: KeyValueEntry[]): string {

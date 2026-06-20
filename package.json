@@ -2,7 +2,7 @@
   "name": "albert",
   "displayName": "Albert",
   "description": "API request files (.abrq) and environment configs (.abenv) with scripting, assertions, and AJV schema validation.",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "publisher": "g-akrp",
   "engines": {
     "vscode": "^1.90.0"
@@ -262,7 +262,7 @@
     "vscode:prepublish": "npm run package",
     "typecheck": "tsc --noEmit -p ./",
     "pretest": "npm run compile && npm run typecheck",
-    "vsix": "npm run package && vsce package --out .albert_built/vsix/",
+    "vsix": "npm run package && node -e \"require('fs').mkdirSync('.albert_built/vsix',{recursive:true})\" && vsce package --out .albert_built/vsix/",
     "cli": "node out/cli.js"
   },
   "dependencies": {
