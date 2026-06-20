@@ -9,7 +9,7 @@ next to the code they test — no proprietary collection format, no separate ser
 | `*.abrq` | One HTTP request — method, endpoint/path, headers, query, body, auth, pre/post-response scripts, declarative assertions, an AJV JSON Schema, a pasted sample response, and Allure report metadata. |
 | `*.abenv` | A named set of `{{variables}}` plus per-environment settings (timeout, follow-redirects). |
 | `*.abf` | An ordered **flow**: a sequence of steps, each referencing a `.abrq` file, run end-to-end via [k6](https://k6.io/). Each step can replay its request's validations as checks and **capture** values forward into `{{variables}}` for later steps. |
-| `*.abl` | A load/stress **simulation**: one or more flows, each at its own target TPS, combined into a single k6 run. Results render live as charts, with an optional New Relic export. |
+| `*.abl` | A load/stress **simulation**: one or more flows, each at its own target TPS, ramp-up, hold, and ramp-down duration, combined into a single k6 run. Results render live as charts, with an optional New Relic export. |
 | `*.abh` | A saved **flow run history** — one or more past flow runs with full per-step detail — opened in a read-only viewer. |
 | `*.abepic` | An Allure **epic**: a name plus a list of feature names. Schema-validated JSON text, no custom editor. |
 | `*.abfeat` | An Allure **feature**: a name, a path back to its `.abepic`, and a list of story names. Schema-validated JSON text, no custom editor. |
@@ -67,10 +67,15 @@ instead, set the **`albert.k6Path`** setting to its path.
 
 ### Sims (load & stress testing)
 
-Right-click a folder → **Albert: New Load Simulation** to create a `.abl`. Pick a **load profile**
-(`constant`/`load`/`stress`/`spike`/`soak`), set the duration/ramp, then add flows — each row picks a
-`.abf` and sets a **target TPS**. Each flow becomes its own k6 arrival-rate scenario, so a single
-sim can drive several flows at independent throughputs simultaneously. Click **▶ Run sim**; results
+Right-click a folder → **Albert: New Load Simulation** to create a `.abl`, then click **+ Add flow**
+for each `.abf` you want to drive. Each flow entry is fully independent: set its own **start at**
+delay (seconds into the run before it kicks off, mapped to k6's scenario `startTime`), **target
+TPS**, **ramp up**, **hold**, and **ramp down** durations — setting ramp up/down to 0 gives a flat
+constant load for the hold duration. Duration fields accept `30s`, `10m`, `1h`, or a compound
+`1h 12m 30s`; a bare number is treated as seconds, and values display the same way (e.g. `1h 12m 30s`).
+Each flow becomes its own k6 arrival-rate scenario with
+its own schedule and pattern, so a single sim can stagger flows to start at different times and drive
+them at independent throughputs *and* independent shapes/durations simultaneously. Click **▶ Run sim**; results
 update live during the run and stay after it finishes, with a switcher between three views — all
 rendered locally, no external service required:
 
@@ -81,7 +86,7 @@ rendered locally, no external service required:
 - **Table** — per-flow summary (achieved vs. target TPS, request count, error %, p50/p95/p99, checks).
 
 Before you run anything, the same view switcher also shows a **Planned load (preview)** panel
-computed from the profile + per-flow target TPS — the **XY** view plots the arrival-rate curve each
+computed from each flow's own profile + target TPS — the **XY** view plots the arrival-rate curve each
 flow will follow over time (ramp/hold/spike shape), the **Sankey** shows how the planned request
 volume splits across flows, and the **Table** lists planned requests per flow. The preview is
 derived from the same load model the k6 scenarios are generated from (`src/model/loadProfile.ts`),

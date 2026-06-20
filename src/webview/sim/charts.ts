@@ -15,6 +15,9 @@ export interface LineChartOptions {
   yMax?: number;
   yLabel?: string;
   yFormat?: (n: number) => string;
+  /** seconds spanned by the series, used to label the x-axis. Defaults to one point per second. */
+  xMax?: number;
+  xFormat?: (n: number) => string;
 }
 
 /** A minimal multi-series line chart rendered as inline SVG (no charting library). */
@@ -32,6 +35,8 @@ export function lineChart(title: string, series: LineSeries[], opts: LineChartOp
   const dataMax = Math.max(0, ...series.flatMap((s) => s.values));
   const yMax = niceMax(opts.yMax ?? dataMax);
   const fmt = opts.yFormat ?? ((n) => String(Math.round(n)));
+  const xMax = opts.xMax ?? Math.max(0, maxLen - 1);
+  const xFmt = opts.xFormat ?? ((n) => `${Math.round(n)}s`);
 
   const wrap = document.createElement('div');
   wrap.className = 'albert-chart';
@@ -49,6 +54,14 @@ export function lineChart(title: string, series: LineSeries[], opts: LineChartOp
     svg.appendChild(line(padL, y, width - padR, y, 'albert-chart-grid'));
     const value = yMax * (1 - i / gridLines);
     svg.appendChild(text(padL - 6, y + 3, fmt(value), 'albert-chart-axis', 'end'));
+  }
+
+  // x-axis ticks + labels (time in seconds)
+  const xGridLines = 4;
+  for (let i = 0; i <= xGridLines; i++) {
+    const x = padL + (plotW * i) / xGridLines;
+    const t = (xMax * i) / xGridLines;
+    svg.appendChild(text(x, height - 4, xFmt(t), 'albert-chart-axis', i === 0 ? 'start' : i === xGridLines ? 'end' : 'middle'));
   }
 
   const xStep = maxLen > 1 ? plotW / (maxLen - 1) : 0;

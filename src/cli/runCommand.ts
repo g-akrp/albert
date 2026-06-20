@@ -1,19 +1,22 @@
 import * as os from 'os';
 import * as path from 'path';
+import * as readline from 'readline';
 import { ensureK6At } from '../k6/binaryCore';
 import { parseEnvConfigFile, parseRequestFile } from '../model/parse';
 import { resolveFlow, resolveSim } from '../k6/resolveTargets';
 import { generateFlowScript } from '../k6/generateFlowScript';
-import { generateSimScript } from '../k6/generateSimScript';
+import { generateSimScript, ResolvedSimFlow } from '../k6/generateSimScript';
+import { planLoad, plannedRequests, totalDurationSec } from '../model/loadProfile';
 import { runFlowOnce } from '../k6/runner';
 import { runSim } from '../k6/simRunner';
 import { resolveRequestPreview, sendRequest } from '../http/httpClient';
 import { runResponseTests } from '../testing/runTests';
 import { runPreRequestScript } from '../scripting/sandbox';
-import { EnvSettings, KeyValueEntry } from '../model/types';
-import { AblogWriter } from './ablog';
+import { EnvSettings, KeyValueEntry, SimFile, SimSummary } from '../model/types';
+import { AblogWriter, timestampedAblogPath } from './ablog';
 import { startServer } from './serveCommand';
 import { readFile } from 'fs/promises';
+import { sendToNewRelic } from '../apm/newrelic';
 
 export interface RunOptions {
   file: string;
@@ -23,6 +26,8 @@ export interface RunOptions {
   serve?: boolean;
   port?: number;
   k6?: string;
+  /** skip the pre-run load-plan confirmation prompt for .abl sims. */
+  quick?: boolean;
 }
 
 export async function runCommand(opts: RunOptions): Promise<number> {
@@ -34,7 +39,9 @@ export async function runCommand(opts: RunOptions): Promise<number> {
   }
 
   const { variables, settings } = await loadEnv(opts.env);
-  const ablogPath = opts.ablog ? path.resolve(opts.ablog) : defaultAblogPath(file);
+  // Sims get a timestamped log per run (matching the GUI editor) so successive runs don't clobber
+  // each other's results; requests/flows keep the single overwrite-in-place log.
+  const ablogPath = opts.ablog ? path.resolve(opts.ablog) : kind === 'sim' ? timestampedAblogPath(file) : defaultAblogPath(file);
   const log = new AblogWriter(ablogPath);
 
   // Start the live server first (if requested) so it polls the log as events arrive.
@@ -129,13 +136,25 @@ async function runFlow(file: string, variables: KeyValueEntry[], opts: RunOption
 }
 
 async function runLoadSim(file: string, variables: KeyValueEntry[], opts: RunOptions, log: AblogWriter) {
-  const { name, profile, flows, metas } = await resolveSim(file);
+  const { name, flows, metas, apm, streaming } = await resolveSim(file);
   log.write({ type: 'runStart', target: file, kind: 'sim', name });
-  console.log(`▶ Sim: ${name} · profile ${profile.type} · ${flows.length} flow(s)`);
+  console.log(`▶ Sim: ${name} · ${flows.length} flow(s)`);
+  printLoadPlan(flows);
+
+  // CLI flag wins if both an explicit --influx and a sim-configured streaming target are present.
+  const influxUrl = opts.influx ?? streaming?.url;
+  if (influxUrl) console.log(`  streaming → Grafana/InfluxDB at ${influxUrl}`);
+  if (apm) console.log(`  apm: New Relic (${apm.region})`);
+
+  if (!opts.quick && !(await confirmStart())) {
+    console.log('  Aborted (pass --quick to skip this prompt).');
+    return { ok: false };
+  }
 
   const k6Path = await resolveK6(opts);
-  const script = generateSimScript(flows, profile, variables);
-  const extraArgs = opts.influx ? ['--out', `influxdb=${opts.influx}`] : [];
+  const script = generateSimScript(flows, variables);
+  const extraArgs = influxUrl ? ['--out', `influxdb=${influxUrl}`] : [];
+  const labelByKey = new Map(metas.map((m) => [m.key, m.label]));
 
   const handle = await runSim(
     k6Path,
@@ -144,8 +163,7 @@ async function runLoadSim(file: string, variables: KeyValueEntry[], opts: RunOpt
     () => console.log('  running…'),
     (tick) => {
       log.write({ type: 'tick', tick });
-      const total = tick.scenarios.reduce((s, x) => s + x.reqs, 0);
-      process.stdout.write(`\r  t=${tick.tSec}s  ${total} req/s   `);
+      process.stdout.write(`\r  ${formatTickLine(tick, labelByKey)}   `);
     },
     extraArgs
   );
@@ -159,9 +177,59 @@ async function runLoadSim(file: string, variables: KeyValueEntry[], opts: RunOpt
           `${(sc.errorRate * 100).toFixed(1)}% err · p95 ${Math.round(sc.p95)}ms`
       );
     }
+    if (apm) {
+      result.summary.apmExport = await exportApm(name, apm.region, result.summary);
+      console.log(`  ${result.summary.apmExport.ok ? '✓' : '✗'} ${result.summary.apmExport.message}`);
+    }
   }
   if (result.error) console.log(`  ${result.error}`);
   return { ok: result.ok };
+}
+
+/** One refreshing status line per tick: total throughput plus each scenario's live tps/p95/err/vus,
+ *  the same fields the GUI's live charts already plot (SimScenarioTick). */
+function formatTickLine(tick: { tSec: number; scenarios: { key: string; reqs: number; p95: number; errorRate: number; vus: number }[] }, labelByKey: Map<string, string>): string {
+  const total = tick.scenarios.reduce((s, x) => s + x.reqs, 0);
+  const perScenario = tick.scenarios
+    .map((sc) => `${labelByKey.get(sc.key) ?? sc.key} ${sc.reqs}/s p95 ${Math.round(sc.p95)}ms err ${(sc.errorRate * 100).toFixed(0)}% vus ${sc.vus}`)
+    .join(' · ');
+  return `t=${tick.tSec}s  ${total} req/s total${perScenario ? ' · ' + perScenario : ''}`;
+}
+
+async function exportApm(simName: string, region: 'US' | 'EU', summary: SimSummary) {
+  const key = process.env.ALBERT_NEWRELIC_KEY;
+  if (!key) return { provider: 'newrelic', ok: false, message: 'apm export skipped — set ALBERT_NEWRELIC_KEY to enable' };
+  const sim: SimFile = { albertType: 'sim', albertVersion: 1, name: simName, flows: [] };
+  return sendToNewRelic(sim, summary, key, region);
+}
+
+/** k6-style pre-run banner: one line per scenario plus totals, so the operator can sanity-check the
+ *  load shape before it actually starts hitting a target. */
+function printLoadPlan(flows: ResolvedSimFlow[]): void {
+  let maxEndSec = 0;
+  let totalReqs = 0;
+  console.log(`  scenarios: (${flows.length} total)`);
+  for (const f of flows) {
+    const plan = planLoad(f.profile, f.targetTps);
+    const durationSec = totalDurationSec(plan);
+    const reqs = plannedRequests(plan);
+    totalReqs += reqs;
+    maxEndSec = Math.max(maxEndSec, f.startAtSec + durationSec);
+    const shape = plan.constant ? `constant ${plan.rate} req/s` : `ramping ${plan.startRate}→${plan.rate} req/s`;
+    const start = f.startAtSec > 0 ? `, starts at ${f.startAtSec}s` : '';
+    console.log(`    * ${f.label}: ${shape}, ${durationSec}s duration, ~${reqs} reqs${start}`);
+  }
+  console.log(`  total: ~${totalReqs} reqs over ${maxEndSec}s`);
+}
+
+async function confirmStart(): Promise<boolean> {
+  const rl = readline.promises.createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    const answer = await rl.question('  Proceed with load test? [y/N] ');
+    return /^y(es)?$/i.test(answer.trim());
+  } finally {
+    rl.close();
+  }
 }
 
 async function resolveK6(opts: RunOptions): Promise<string> {

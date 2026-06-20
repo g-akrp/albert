@@ -23,7 +23,8 @@ class SimStore {
   ticks: SimTick[] = [];
   summary: SimSummary | null = null;
   error: string | null = null;
-  resultView: 'xy' | 'sankey' | 'table' = 'xy';
+  activeTab: 'configure' | 'report' = 'configure';
+  ablogPath: string | null = null;
 
   private listeners: Listener[] = [];
   private editTimer: ReturnType<typeof setTimeout> | null = null;
@@ -83,12 +84,24 @@ class SimStore {
     this.summary = null;
     this.error = null;
     this.scenarios = [];
+    this.ablogPath = null;
+    this.activeTab = 'report';
     this.notify();
     vscodeApi.postMessage({ type: 'runSim' });
   }
 
   stop(): void {
     vscodeApi.postMessage({ type: 'stopSim' });
+  }
+
+  setActiveTab(tab: 'configure' | 'report'): void {
+    this.activeTab = tab;
+    this.notify();
+  }
+
+  setAblogPath(path: string): void {
+    this.ablogPath = path;
+    this.notify();
   }
 
   onStarted(scenarios: SimScenarioMeta[]): void {
@@ -127,8 +140,9 @@ class SimStore {
     vscodeApi.postMessage({ type: 'setApmKey' });
   }
 
-  setResultView(view: 'xy' | 'sankey' | 'table'): void {
-    this.resultView = view;
+  /** Forces a re-render — e.g. to pick up field edits made via `mutateQuiet` (which doesn't notify
+   *  on every keystroke) in the planned-load preview without waiting for an unrelated re-render. */
+  refresh(): void {
     this.notify();
   }
 

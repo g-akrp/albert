@@ -24,7 +24,7 @@ export function parseFlowFile(text: string): FlowFile | null {
 
 export function parseSimFile(text: string): SimFile | null {
   const parsed = tryJson(text);
-  if (parsed && parsed.albertType === 'sim' && parsed.albertVersion === 1 && parsed.profile && Array.isArray(parsed.flows)) {
+  if (parsed && parsed.albertType === 'sim' && parsed.albertVersion === 1 && Array.isArray(parsed.flows)) {
     return parsed as SimFile;
   }
   return null;

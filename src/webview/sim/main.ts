@@ -43,6 +43,9 @@ onHostMessage<SimHostToWebviewMessage>((message) => {
     case 'simTick':
       store.onTick(message.tick);
       break;
+    case 'ablogSaved':
+      store.setAblogPath(message.path);
+      break;
     case 'simDone':
       store.onDone(message.result);
       break;
@@ -60,18 +63,28 @@ function injectSimStyles(): void {
   style.textContent = `
     .albert-env-readout { color: var(--albert-muted); font-size: 12px; margin-bottom: 8px; }
     .albert-flow-toolbar { display: flex; gap: 6px; margin-bottom: 12px; }
-    .albert-sim-profile { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 12px; }
     .albert-sim-field { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--albert-muted); }
-    .albert-sim-flow-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .albert-sim-flow-card { border: 1px solid var(--albert-border); border-radius: var(--albert-radius); padding: 10px; margin-bottom: 8px; }
+    .albert-sim-flow-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .albert-sim-flow-fields { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; }
+    .albert-sim-total-label { font-size: 12px; color: var(--albert-muted); align-self: center; }
     .albert-flow-req-path { font-family: var(--vscode-editor-font-family); font-size: 12px; }
     .albert-flow-req-path.missing { color: var(--vscode-errorForeground); }
-    .albert-sim-tps-label { font-size: 11px; color: var(--albert-muted); }
     .albert-flow-validate { display: flex; align-items: center; gap: 6px; font-size: 12px; }
     .albert-row { display: flex; gap: 10px; align-items: center; margin-top: 6px; }
-    .albert-sim-apm-status { font-size: 12px; }
+    .albert-sim-apm-panel { border: 1px solid var(--albert-border); border-radius: var(--albert-radius); padding: 10px 12px; margin-bottom: 12px; transition: border-color 0.15s; }
+    .albert-sim-apm-panel.on { border-color: var(--albert-ok, #2cbb4b); }
+    .albert-sim-apm-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .albert-sim-apm-title { display: flex; flex-direction: column; gap: 2px; }
+    .albert-sim-apm-toggle { display: flex; align-items: center; gap: 6px; font-size: 12px; flex-shrink: 0; white-space: nowrap; }
+    .albert-sim-apm-body { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--albert-border-subtle); }
+    .albert-sim-apm-readonly { font-size: 12px; color: var(--albert-muted); padding: 3px 0; }
+    .albert-sim-apm-status { font-size: 12px; display: inline-flex; align-items: center; gap: 5px; }
     .albert-sim-apm-status.ok { color: var(--albert-ok); }
     .albert-sim-apm-status.missing { color: var(--albert-muted); }
+    .albert-sim-apm-status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
     .albert-flow-results { margin-top: 16px; border-top: 1px solid var(--albert-border); padding-top: 12px; }
+    .albert-sim-preview-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
     .albert-response-status.ok { color: var(--albert-ok); }
     .albert-response-status.err { color: var(--albert-err); }
     .albert-chart { margin: 12px 0; max-width: 560px; }
@@ -93,9 +106,11 @@ function injectSimStyles(): void {
     .albert-sim-summary tr:last-child td { border-bottom: none; }
     .albert-sim-summary th { background: var(--vscode-editorWidget-background, var(--vscode-textCodeBlock-background)); font-weight: 600; }
     .albert-sim-summary tr.err td { color: var(--albert-err); }
+    .albert-sim-summary tfoot td { font-weight: 600; border-top: 1px solid var(--albert-border); background: var(--vscode-editorWidget-background, var(--vscode-textCodeBlock-background)); }
     .albert-sim-summary-charts { display: flex; flex-direction: column; gap: 4px; }
-    .albert-sim-view-switcher { display: flex; gap: 4px; margin: 8px 0 12px; }
-    .albert-sim-view-switcher button { flex: 0 0 auto; }
+    .albert-sim-grid { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
+    .albert-sim-grid-top { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+    .albert-sim-grid-top > * { flex: 1 1 320px; min-width: 0; }
     .albert-sankey-label { fill: var(--vscode-foreground); font-size: 10px; }
   `;
   document.head.appendChild(style);

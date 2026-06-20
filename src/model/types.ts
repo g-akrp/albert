@@ -232,7 +232,13 @@ export function createHistoryFile(name: string, flowRuns: FlowRunHistoryEntry[])
 
 // --- Simulation file (.abl) ---
 
-export type LoadProfile = 'constant' | 'load' | 'stress' | 'spike' | 'soak';
+/** A flow's load shape: ramp up to target TPS, hold there, ramp down to 0. Total duration is the
+ *  sum of the three; setting rampUpSec/rampDownSec to 0 yields a constant load for holdSec. */
+export interface SimProfile {
+  rampUpSec: number;
+  holdSec: number;
+  rampDownSec: number;
+}
 
 export interface SimFlowEntry {
   id: string;
@@ -240,14 +246,11 @@ export interface SimFlowEntry {
   flowPath: string;
   /** target throughput in iterations (flow runs) per second. */
   targetTps: number;
+  /** this flow's own load pattern — each flow rides its own profile/duration/ramp independently. */
+  profile: SimProfile;
+  /** seconds into the sim run before this flow's own ramp up/hold/ramp down begins (k6 scenario `startTime`). */
+  startAtSec: number;
   enabled: boolean;
-}
-
-export interface SimProfile {
-  type: LoadProfile;
-  durationSec: number;
-  /** ramp-up window (seconds) for staged profiles; ignored by 'constant'. */
-  rampUpSec?: number;
 }
 
 /** APM export target. Behaviour wired in Phase 3; the API key is never stored here (SecretStorage). */
@@ -256,13 +259,23 @@ export interface ApmConfig {
   region: 'US' | 'EU';
 }
 
+/** Live metrics streaming target for the run itself (k6 `--out`), e.g. the bundled `albert-stack` InfluxDB+Grafana. */
+export interface StreamingConfig {
+  provider: 'influxdb';
+  url: string;
+}
+
 export interface SimFile {
   albertType: 'sim';
   albertVersion: 1;
   name: string;
-  profile: SimProfile;
   flows: SimFlowEntry[];
   apm?: ApmConfig;
+  streaming?: StreamingConfig;
+}
+
+export function createDefaultSimProfile(): SimProfile {
+  return { rampUpSec: 10, holdSec: 40, rampDownSec: 10 };
 }
 
 export function createEmptySimFile(name: string): SimFile {
@@ -270,7 +283,6 @@ export function createEmptySimFile(name: string): SimFile {
     albertType: 'sim',
     albertVersion: 1,
     name,
-    profile: { type: 'load', durationSec: 60, rampUpSec: 10 },
     flows: [],
   };
 }
@@ -467,6 +479,7 @@ export type SimHostToWebviewMessage =
   | { type: 'flowPicked'; entryId: string; flowPath: string }
   | { type: 'simStarted'; scenarios: SimScenarioMeta[] }
   | { type: 'simTick'; tick: SimTick }
+  | { type: 'ablogSaved'; path: string }
   | { type: 'simDone'; result: SimRunResult }
   | { type: 'error'; message: string };
 

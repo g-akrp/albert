@@ -28,61 +28,22 @@ export interface RatePoint {
 
 export function planLoad(profile: SimProfile, targetTps: number): LoadPlan {
   const rate = Math.max(1, Math.round(targetTps));
-  const duration = Math.max(1, Math.round(profile.durationSec));
-  const ramp = Math.max(1, Math.round(profile.rampUpSec ?? Math.min(10, Math.ceil(duration / 6))));
+  const rampUp = Math.max(0, Math.round(profile.rampUpSec));
+  const hold = Math.max(0, Math.round(profile.holdSec));
+  const rampDown = Math.max(0, Math.round(profile.rampDownSec));
 
-  switch (profile.type) {
-    case 'constant':
-    case 'soak':
-      return { rate, startRate: rate, constant: true, stages: [{ toRate: rate, durationSec: duration }] };
+  const stages: LoadStage[] = [];
+  if (rampUp > 0) stages.push({ toRate: rate, durationSec: rampUp });
+  if (hold > 0) stages.push({ toRate: rate, durationSec: hold });
+  if (rampDown > 0) stages.push({ toRate: 0, durationSec: rampDown });
+  if (stages.length === 0) stages.push({ toRate: rate, durationSec: 1 });
 
-    case 'spike': {
-      const baseline = Math.max(1, Math.round(rate * 0.1));
-      const hold = Math.max(1, duration - 2 * ramp);
-      return {
-        rate,
-        startRate: 0,
-        constant: false,
-        stages: [
-          { toRate: baseline, durationSec: ramp },
-          { toRate: rate, durationSec: 1 },
-          { toRate: rate, durationSec: hold },
-          { toRate: 0, durationSec: ramp },
-        ],
-      };
-    }
-
-    case 'stress': {
-      const hold = Math.max(1, Math.round((duration - 3 * ramp) / 2));
-      return {
-        rate,
-        startRate: 0,
-        constant: false,
-        stages: [
-          { toRate: rate, durationSec: ramp },
-          { toRate: rate, durationSec: hold },
-          { toRate: rate * 2, durationSec: ramp },
-          { toRate: rate * 2, durationSec: hold },
-          { toRate: 0, durationSec: ramp },
-        ],
-      };
-    }
-
-    case 'load':
-    default: {
-      const hold = Math.max(1, duration - 2 * ramp);
-      return {
-        rate,
-        startRate: 0,
-        constant: false,
-        stages: [
-          { toRate: rate, durationSec: ramp },
-          { toRate: rate, durationSec: hold },
-          { toRate: 0, durationSec: ramp },
-        ],
-      };
-    }
-  }
+  return {
+    rate,
+    startRate: rampUp > 0 ? 0 : rate,
+    constant: rampUp === 0 && rampDown === 0,
+    stages,
+  };
 }
 
 export function totalDurationSec(plan: LoadPlan): number {
@@ -115,17 +76,48 @@ function interpAt(verts: RatePoint[], t: number): number {
   return last.rate;
 }
 
-/** Samples the rate curve at up to `maxPoints` evenly-spaced times across the run for plotting. */
-export function sampleRateCurve(plan: LoadPlan, maxPoints = 200): RatePoint[] {
-  const total = totalDurationSec(plan);
-  const verts = vertices(plan);
-  const n = Math.max(2, Math.min(maxPoints, total + 1));
+/** The plan's rate at absolute time `t` (seconds since the plan's own start), 0 outside [0, duration] —
+ *  a plan does not hold its last rate once it finishes, mirroring k6's scenario lifecycle. */
+export function rateAt(plan: LoadPlan, t: number): number {
+  if (t < 0 || t > totalDurationSec(plan)) return 0;
+  return interpAt(vertices(plan), t);
+}
+
+/** A plan paired with the offset (seconds into the overall sim) at which it starts. */
+export interface ScheduledPlan {
+  plan: LoadPlan;
+  startAtSec: number;
+}
+
+/** Samples one flow's rate curve, shifted by its `startAtSec`, across a shared `spanSec` timeline so
+ *  multiple flows with different start times/durations can be plotted on the same x-axis. */
+export function sampleScheduledCurve(entry: ScheduledPlan, spanSec: number, maxPoints = 200): RatePoint[] {
+  const n = Math.max(2, Math.min(maxPoints, Math.max(1, Math.round(spanSec)) + 1));
   const points: RatePoint[] = [];
   for (let i = 0; i < n; i++) {
-    const t = (total * i) / (n - 1);
-    points.push({ tSec: t, rate: interpAt(verts, t) });
+    const t = (spanSec * i) / (n - 1);
+    points.push({ tSec: t, rate: rateAt(entry.plan, t - entry.startAtSec) });
   }
   return points;
+}
+
+/** Sums multiple flows' rate curves (each shifted by its own start time) into one combined curve,
+ *  sampled across the shared sim span. */
+export function sumScheduledCurves(entries: ScheduledPlan[], spanSec: number, maxPoints = 200): RatePoint[] {
+  const n = Math.max(2, Math.min(maxPoints, Math.max(1, Math.round(spanSec)) + 1));
+  const points: RatePoint[] = [];
+  for (let i = 0; i < n; i++) {
+    const t = (spanSec * i) / (n - 1);
+    let rate = 0;
+    for (const entry of entries) rate += rateAt(entry.plan, t - entry.startAtSec);
+    points.push({ tSec: t, rate });
+  }
+  return points;
+}
+
+/** Overall sim span: the latest point at which any flow finishes (start + own duration). */
+export function combinedSpanSec(entries: ScheduledPlan[]): number {
+  return Math.max(1, ...entries.map((e) => e.startAtSec + totalDurationSec(e.plan)));
 }
 
 /** Total requests the profile is expected to issue = area under the rate curve. */

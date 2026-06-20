@@ -95,7 +95,7 @@ function injectFlowStyles(): void {
     
     .albert-sidebar-step-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: pointer; border-left: 3px solid transparent; transition: background 0.15s ease, border-color 0.15s ease; position: relative; }
     .albert-sidebar-step-item:hover { background: var(--vscode-list-hoverBackground); }
-    .albert-sidebar-step-item.selected { background: var(--vscode-list-activeSelectionBackground, rgba(0, 122, 204, 0.1)); border-left-color: var(--vscode-focusBorder, #007acc); }
+    .albert-sidebar-step-item.selected { border-left-color: var(--vscode-focusBorder, #007acc); }
     .albert-sidebar-step-item.disabled { opacity: 0.5; }
     
     .step-status-indicator { width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; }

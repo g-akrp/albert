@@ -16,6 +16,7 @@ import { generateSimScript, ResolvedSimFlow } from '../k6/generateSimScript';
 import { runSim, SimRunHandle } from '../k6/simRunner';
 import { ensureK6 } from '../k6/binary';
 import { exportToApm, getApmKey, hasApmKey, promptAndStoreApmKey } from '../apm';
+import { AblogWriter, timestampedAblogPath } from '../cli/ablog';
 
 export class SimEditorProvider implements vscode.CustomTextEditorProvider {
   public static readonly viewType = 'albert.simEditor';
@@ -158,7 +159,14 @@ export class SimEditorProvider implements vscode.CustomTextEditorProvider {
         return undefined;
       }
       const key = scenarioKey(entry.id);
-      resolvedFlows.push({ key, label: flowFile.name || entry.flowPath, targetTps: entry.targetTps, steps });
+      resolvedFlows.push({
+        key,
+        label: flowFile.name || entry.flowPath,
+        targetTps: entry.targetTps,
+        profile: entry.profile,
+        startAtSec: entry.startAtSec,
+        steps,
+      });
       metas.push({ key, label: flowFile.name || entry.flowPath, targetTps: entry.targetTps });
     }
 
@@ -168,7 +176,7 @@ export class SimEditorProvider implements vscode.CustomTextEditorProvider {
     }
 
     const { variables } = await this.activeEnvironment.getActiveVariablesAndSettings();
-    const script = generateSimScript(resolvedFlows, sim.profile, variables);
+    const script = generateSimScript(resolvedFlows, variables);
 
     let k6Path: string;
     try {
@@ -178,15 +186,30 @@ export class SimEditorProvider implements vscode.CustomTextEditorProvider {
       return undefined;
     }
 
+    const ablogPath = timestampedAblogPath(document.uri.fsPath);
+    const log = new AblogWriter(ablogPath);
+    log.write({ type: 'runStart', target: document.uri.fsPath, kind: 'sim', name: sim.name });
+
+    const extraArgs = sim.streaming ? ['--out', `influxdb=${sim.streaming.url}`] : [];
+
     const handle = await runSim(
       k6Path,
       script,
       metas,
       () => postToWebview({ type: 'simStarted', scenarios: metas }),
-      (tick) => postToWebview({ type: 'simTick', tick })
+      (tick) => {
+        log.write({ type: 'tick', tick });
+        postToWebview({ type: 'simTick', tick });
+      },
+      extraArgs
     );
 
     void handle.result.then(async (result) => {
+      if (result.summary) log.write({ type: 'summary', summary: result.summary });
+      log.write({ type: 'runEnd', ok: result.ok, error: result.error });
+      await log.close();
+      postToWebview({ type: 'ablogSaved', path: ablogPath });
+
       const finalResult = await this.maybeExportApm(sim, result);
       postToWebview({ type: 'simDone', result: finalResult });
     });
@@ -296,7 +319,7 @@ function toRelative(fromDir: string, target: string): string {
 export function tryParseSimFile(text: string): SimFile | null {
   try {
     const parsed = JSON.parse(text);
-    if (parsed && parsed.albertType === 'sim' && parsed.albertVersion === 1 && parsed.profile && Array.isArray(parsed.flows)) {
+    if (parsed && parsed.albertType === 'sim' && parsed.albertVersion === 1 && Array.isArray(parsed.flows)) {
       return parsed as SimFile;
     }
     return null;

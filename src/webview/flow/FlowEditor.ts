@@ -135,10 +135,17 @@ function renderHeader(): HTMLElement {
   nameInput.oninput = () => store.mutateQuiet(() => (store.file.name = nameInput.value));
   titleWrap.appendChild(nameInput);
 
-  const env = document.createElement('div');
-  env.className = 'albert-env-readout';
-  env.textContent = `Env: ${store.activeEnvName ?? 'none'}`;
-  titleWrap.appendChild(env);
+  const hasEnv = !!store.activeEnvName;
+  const envBadge = document.createElement('div');
+  envBadge.className = 'albert-env-badge';
+  envBadge.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;border:1px solid var(--albert-border);background:var(--vscode-editorWidget-background,rgba(128,128,128,0.08))';
+  const envDot = document.createElement('span');
+  envDot.style.cssText = `width:6px;height:6px;border-radius:50%;background:${hasEnv ? 'var(--albert-ok,#2cbb4b)' : 'var(--albert-muted,#808080)'}`;
+  const envText = document.createElement('span');
+  envText.textContent = hasEnv ? `Env: ${store.activeEnvName}` : 'No environment';
+  envText.style.color = hasEnv ? 'var(--vscode-foreground)' : 'var(--albert-muted)';
+  envBadge.append(envDot, envText);
+  titleWrap.appendChild(envBadge);
 
   const allureStatus = document.createElement('div');
   allureStatus.className = `albert-allure-status ${store.allureEnabled ? 'on' : 'off'}`;

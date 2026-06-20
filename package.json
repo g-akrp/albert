@@ -2,7 +2,7 @@
   "name": "albert",
   "displayName": "Albert",
   "description": "API testing in plain JSON files checked into your repo: requests, environments, k6-powered flows and load sims, Allure reporting, and a CLI for CI.",
-  "version": "0.5.0",
+  "version": "1.0.0-beta.1",
   "publisher": "g-akrp",
   "preview": true,
   "icon": "icon.png",
@@ -226,47 +226,62 @@
     "commands": [
       {
         "command": "albert.newRequestFile",
-        "title": "Albert: New API Request File",
+        "title": "New API Request File",
+        "category": "Albert"
+      },
+      {
+        "command": "albert.newRequestFromCurl",
+        "title": "New API Request from cURL",
         "category": "Albert"
       },
       {
         "command": "albert.newEnvConfigFile",
-        "title": "Albert: New Environment Config",
+        "title": "New Environment Config",
         "category": "Albert"
       },
       {
         "command": "albert.newFlowFile",
-        "title": "Albert: New API Flow",
+        "title": "New API Flow",
         "category": "Albert"
       },
       {
         "command": "albert.newSimFile",
-        "title": "Albert: New Load Simulation",
+        "title": "New Load Simulation",
         "category": "Albert"
       },
       {
         "command": "albert.selectActiveEnvironment",
-        "title": "Albert: Select Active Environment",
+        "title": "Select Active Environment",
         "category": "Albert"
       },
       {
         "command": "albert.setNewRelicKey",
-        "title": "Albert: Set New Relic API Key",
+        "title": "Set New Relic API Key",
         "category": "Albert"
       },
       {
         "command": "albert.installCli",
-        "title": "Albert: Install CLI",
+        "title": "Install CLI",
         "category": "Albert"
       },
       {
         "command": "albert.uninstallCli",
-        "title": "Albert: Uninstall CLI",
+        "title": "Uninstall CLI",
+        "category": "Albert"
+      },
+      {
+        "command": "albert.startGrafanaStack",
+        "title": "Start Grafana/InfluxDB Stack",
+        "category": "Albert"
+      },
+      {
+        "command": "albert.startAllureStack",
+        "title": "Start Allure Report Server",
         "category": "Albert"
       },
       {
         "command": "albert.openAsText",
-        "title": "Albert: Open File as Text",
+        "title": "Open File as Text",
         "category": "Albert"
       }
     ],
@@ -274,6 +289,11 @@
       "explorer/context": [
         {
           "command": "albert.newRequestFile",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation"
+        },
+        {
+          "command": "albert.newRequestFromCurl",
           "when": "explorerResourceIsFolder",
           "group": "navigation"
         },

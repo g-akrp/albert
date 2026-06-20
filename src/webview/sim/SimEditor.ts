@@ -1,17 +1,47 @@
-import { LoadProfile, SimFlowEntry, SimScenarioSummary } from '../../model/types';
-import { planLoad, plannedRequests, sampleRateCurve, totalDurationSec } from '../../model/loadProfile';
+import { createDefaultSimProfile, SimFlowEntry, SimScenarioSummary } from '../../model/types';
+import {
+  combinedSpanSec,
+  planLoad,
+  plannedRequests,
+  sampleScheduledCurve,
+  ScheduledPlan,
+  sumScheduledCurves,
+  totalDurationSec,
+} from '../../model/loadProfile';
 import { barChart, lineChart, LineSeries, PALETTE, sankeyChart, SankeyLink, SankeyNode } from './charts';
 import { genId, store } from './state';
-
-const PROFILES: LoadProfile[] = ['constant', 'load', 'stress', 'spike', 'soak'];
 
 export function renderSim(container: HTMLElement): void {
   container.innerHTML = '';
   container.appendChild(renderHeader());
-  container.appendChild(renderProfile());
-  container.appendChild(renderFlows());
-  container.appendChild(renderApm());
-  container.appendChild(renderVisualization());
+  container.appendChild(renderTabBar());
+
+  if (store.activeTab === 'configure') {
+    container.appendChild(renderPlannedPreview());
+    container.appendChild(renderFlows());
+    container.appendChild(renderApm());
+    container.appendChild(renderStreaming());
+  } else {
+    container.appendChild(renderExecutionReport());
+  }
+}
+
+function renderTabBar(): HTMLElement {
+  const bar = document.createElement('div');
+  bar.className = 'albert-tabs';
+
+  const tabs: { id: 'configure' | 'report'; label: string }[] = [
+    { id: 'configure', label: 'Configure' },
+    { id: 'report', label: 'Execution Report' },
+  ];
+  for (const t of tabs) {
+    const el = document.createElement('div');
+    el.className = 'albert-tab' + (store.activeTab === t.id ? ' active' : '');
+    el.textContent = t.label;
+    el.onclick = () => store.setActiveTab(t.id);
+    bar.appendChild(el);
+  }
+  return bar;
 }
 
 function renderHeader(): HTMLElement {
@@ -20,16 +50,14 @@ function renderHeader(): HTMLElement {
   const nameInput = document.createElement('input');
   nameInput.type = 'text';
   nameInput.value = store.file.name;
+  nameInput.disabled = store.running;
   nameInput.style.fontWeight = '600';
   nameInput.style.width = '100%';
   nameInput.style.marginBottom = '6px';
   nameInput.oninput = () => store.mutateQuiet(() => (store.file.name = nameInput.value));
   header.appendChild(nameInput);
 
-  const env = document.createElement('div');
-  env.className = 'albert-env-readout';
-  env.textContent = `Env: ${store.activeEnvName ?? 'none'}`;
-  header.appendChild(env);
+  header.appendChild(renderEnvBadge());
 
   const bar = document.createElement('div');
   bar.className = 'albert-flow-toolbar';
@@ -47,71 +75,84 @@ function renderHeader(): HTMLElement {
     bar.appendChild(runBtn);
   }
 
-  const addBtn = document.createElement('button');
-  addBtn.className = 'secondary';
-  addBtn.textContent = '+ Add flow';
-  addBtn.disabled = store.running;
-  addBtn.onclick = () =>
-    store.mutate(() => store.file.flows.push({ id: genId('flow'), flowPath: '', targetTps: 10, enabled: true }));
-  bar.appendChild(addBtn);
-
   header.appendChild(bar);
   return header;
 }
 
-function renderProfile(): HTMLElement {
-  const wrap = document.createElement('div');
-  wrap.className = 'albert-sim-profile';
-
-  const profileSel = document.createElement('select');
-  for (const p of PROFILES) {
-    const opt = document.createElement('option');
-    opt.value = p;
-    opt.textContent = p;
-    if (p === store.file.profile.type) opt.selected = true;
-    profileSel.appendChild(opt);
-  }
-  profileSel.onchange = () => store.mutate(() => (store.file.profile.type = profileSel.value as LoadProfile));
-
-  const duration = numberField('Duration (s)', store.file.profile.durationSec, (v) =>
-    store.mutateQuiet(() => (store.file.profile.durationSec = v))
-  );
-  const ramp = numberField('Ramp (s)', store.file.profile.rampUpSec ?? 0, (v) =>
-    store.mutateQuiet(() => (store.file.profile.rampUpSec = v))
-  );
-
-  wrap.append(labeled('Profile', profileSel), duration, ramp);
-  return wrap;
+function renderEnvBadge(): HTMLElement {
+  const hasEnv = !!store.activeEnvName;
+  const envBadge = document.createElement('div');
+  envBadge.className = 'albert-env-badge';
+  envBadge.style.cssText =
+    'display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;border:1px solid var(--albert-border);background:var(--vscode-editorWidget-background,rgba(128,128,128,0.08));margin-bottom:8px';
+  const envDot = document.createElement('span');
+  envDot.style.cssText = `width:6px;height:6px;border-radius:50%;background:${hasEnv ? 'var(--albert-ok,#2cbb4b)' : 'var(--albert-muted,#808080)'}`;
+  const envText = document.createElement('span');
+  envText.textContent = hasEnv ? `Env: ${store.activeEnvName}` : 'No environment';
+  envText.style.color = hasEnv ? 'var(--vscode-foreground)' : 'var(--albert-muted)';
+  envBadge.append(envDot, envText);
+  return envBadge;
 }
 
 function renderFlows(): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'albert-sim-flows';
 
+  const titleRow = document.createElement('div');
+  titleRow.style.display = 'flex';
+  titleRow.style.alignItems = 'center';
+  titleRow.style.justifyContent = 'space-between';
+  titleRow.style.marginBottom = '6px';
+
   const title = document.createElement('div');
   title.className = 'albert-section-title';
-  title.textContent = 'Flows & target TPS';
-  wrap.appendChild(title);
+  title.style.marginBottom = '0';
+  title.textContent = 'Flows & load pattern';
+  titleRow.appendChild(title);
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'secondary';
+  addBtn.textContent = '+ Add flow';
+  addBtn.disabled = store.running;
+  addBtn.onclick = () =>
+    store.mutate(() =>
+      store.file.flows.push({
+        id: genId('flow'),
+        flowPath: '',
+        targetTps: 10,
+        profile: createDefaultSimProfile(),
+        startAtSec: 0,
+        enabled: true,
+      })
+    );
+  titleRow.appendChild(addBtn);
+
+  wrap.appendChild(titleRow);
 
   if (store.file.flows.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'albert-empty';
-    empty.textContent = 'No flows yet. Click "Add flow" and pick a .abf for each, with a target TPS.';
+    empty.textContent = 'No flows yet. Click "Add flow" and pick a .abf for each, with its own target TPS, profile, duration and ramp.';
     wrap.appendChild(empty);
     return wrap;
   }
 
-  store.file.flows.forEach((entry, index) => wrap.appendChild(renderFlowRow(entry, index)));
+  store.file.flows.forEach((entry, index) => wrap.appendChild(renderFlowCard(entry, index)));
   return wrap;
 }
 
-function renderFlowRow(entry: SimFlowEntry, index: number): HTMLElement {
-  const row = document.createElement('div');
-  row.className = 'albert-sim-flow-row';
+function renderFlowCard(entry: SimFlowEntry, index: number): HTMLElement {
+  const locked = store.running;
+  const card = document.createElement('div');
+  card.className = 'albert-sim-flow-card';
+
+  const top = document.createElement('div');
+  top.className = 'albert-sim-flow-row';
 
   const enabled = document.createElement('input');
   enabled.type = 'checkbox';
   enabled.checked = entry.enabled;
+  enabled.disabled = locked;
   enabled.title = 'enabled';
   enabled.onchange = () => store.mutate(() => (entry.enabled = enabled.checked));
 
@@ -122,56 +163,85 @@ function renderFlowRow(entry: SimFlowEntry, index: number): HTMLElement {
 
   const pickBtn = document.createElement('button');
   pickBtn.className = 'secondary';
+  pickBtn.disabled = locked;
   pickBtn.textContent = 'Pick flow…';
   pickBtn.onclick = () => store.pickFlow(entry.id);
 
-  const tps = document.createElement('input');
-  tps.type = 'number';
-  tps.min = '1';
-  tps.value = String(entry.targetTps);
-  tps.title = 'target TPS';
-  tps.style.width = '70px';
-  tps.oninput = () => store.mutateQuiet(() => (entry.targetTps = Math.max(1, Number(tps.value) || 1)));
-
-  const tpsLabel = document.createElement('span');
-  tpsLabel.className = 'albert-sim-tps-label';
-  tpsLabel.textContent = 'TPS';
-
   const del = document.createElement('button');
   del.className = 'secondary albert-icon-btn';
+  del.disabled = locked;
   del.textContent = '✕';
   del.onclick = () => store.mutate(() => store.file.flows.splice(index, 1));
 
-  row.append(enabled, flowPath, pickBtn, tps, tpsLabel, del);
-  return row;
+  top.append(enabled, flowPath, pickBtn, del);
+
+  const fields = document.createElement('div');
+  fields.className = 'albert-sim-flow-fields';
+
+  const startAt = durationField('Start at', entry.startAtSec, (v) => store.mutateQuiet(() => (entry.startAtSec = v)), locked);
+  const tps = numberField('Target TPS', entry.targetTps, (v) => store.mutateQuiet(() => (entry.targetTps = Math.max(1, v || 1))), locked, 1);
+  const rampUp = durationField('Ramp up', entry.profile.rampUpSec, (v) => store.mutateQuiet(() => (entry.profile.rampUpSec = v)), locked);
+  const hold = durationField('Hold', entry.profile.holdSec, (v) => store.mutateQuiet(() => (entry.profile.holdSec = v)), locked);
+  const rampDown = durationField('Ramp down', entry.profile.rampDownSec, (v) => store.mutateQuiet(() => (entry.profile.rampDownSec = v)), locked);
+
+  const total = document.createElement('span');
+  total.className = 'albert-sim-total-label';
+  const updateTotal = () =>
+    (total.textContent = `Ends at: ${formatDurationSec(entry.startAtSec + entry.profile.rampUpSec + entry.profile.holdSec + entry.profile.rampDownSec)}`);
+  updateTotal();
+  for (const field of [startAt, rampUp, hold, rampDown]) {
+    field.querySelector('input')?.addEventListener('input', updateTotal);
+  }
+
+  fields.append(startAt, tps, rampUp, hold, rampDown, total);
+
+  card.append(top, fields);
+  return card;
 }
 
 function renderApm(): HTMLElement {
-  const wrap = document.createElement('div');
-  wrap.className = 'albert-sim-apm';
+  const locked = store.running;
+  const enabled = !!store.file.apm;
 
+  const panel = document.createElement('div');
+  panel.className = 'albert-sim-apm-panel' + (enabled ? ' on' : '');
+
+  const header = document.createElement('div');
+  header.className = 'albert-sim-apm-header';
+
+  const titleWrap = document.createElement('div');
+  titleWrap.className = 'albert-sim-apm-title';
   const title = document.createElement('div');
   title.className = 'albert-section-title';
-  title.textContent = 'APM export';
-  wrap.appendChild(title);
+  title.style.marginBottom = '0';
+  title.textContent = 'New Relic export';
+  const subtitle = document.createElement('div');
+  subtitle.className = 'albert-env-readout';
+  subtitle.style.margin = '0';
+  subtitle.textContent = 'Send per-flow metrics to New Relic after the run finishes.';
+  titleWrap.append(title, subtitle);
 
-  const toggleRow = document.createElement('label');
-  toggleRow.className = 'albert-flow-validate';
+  const toggleLabel = document.createElement('label');
+  toggleLabel.className = 'albert-sim-apm-toggle';
   const toggle = document.createElement('input');
   toggle.type = 'checkbox';
-  toggle.checked = !!store.file.apm;
+  toggle.checked = enabled;
+  toggle.disabled = locked;
   toggle.onchange = () =>
     store.mutate(() => {
       store.file.apm = toggle.checked ? { provider: 'newrelic', region: 'US' } : undefined;
     });
-  toggleRow.append(toggle, document.createTextNode(' Send results to New Relic after the run'));
-  wrap.appendChild(toggleRow);
+  toggleLabel.append(toggle, document.createTextNode(' Enabled'));
+
+  header.append(titleWrap, toggleLabel);
+  panel.appendChild(header);
 
   if (store.file.apm) {
-    const cfg = document.createElement('div');
-    cfg.className = 'albert-row';
+    const body = document.createElement('div');
+    body.className = 'albert-sim-apm-body';
 
     const regionSel = document.createElement('select');
+    regionSel.disabled = locked;
     for (const r of ['US', 'EU'] as const) {
       const opt = document.createElement('option');
       opt.value = r;
@@ -183,59 +253,132 @@ function renderApm(): HTMLElement {
 
     const keyBtn = document.createElement('button');
     keyBtn.className = 'secondary';
+    keyBtn.disabled = locked;
     keyBtn.textContent = store.hasApmKey ? 'Update API key' : 'Set API key';
     keyBtn.onclick = () => store.setApmKey();
 
     const status = document.createElement('span');
     status.className = 'albert-sim-apm-status ' + (store.hasApmKey ? 'ok' : 'missing');
-    status.textContent = store.hasApmKey ? 'API key set' : 'No API key set';
+    const statusDot = document.createElement('span');
+    statusDot.className = 'albert-sim-apm-status-dot';
+    status.append(statusDot, document.createTextNode(store.hasApmKey ? 'API key set' : 'No API key set'));
 
-    cfg.append(labeled('Region', regionSel), keyBtn, status);
-    wrap.appendChild(cfg);
+    body.append(labeled('Provider', readonlyText('New Relic')), labeled('Region', regionSel), keyBtn, status);
+    panel.appendChild(body);
   }
 
-  return wrap;
+  return panel;
 }
 
-function renderVisualization(): HTMLElement {
+function renderStreaming(): HTMLElement {
+  const locked = store.running;
+  const enabled = !!store.file.streaming;
+
+  const panel = document.createElement('div');
+  panel.className = 'albert-sim-apm-panel' + (enabled ? ' on' : '');
+
+  const header = document.createElement('div');
+  header.className = 'albert-sim-apm-header';
+
+  const titleWrap = document.createElement('div');
+  titleWrap.className = 'albert-sim-apm-title';
+  const title = document.createElement('div');
+  title.className = 'albert-section-title';
+  title.style.marginBottom = '0';
+  title.textContent = 'Stream to Grafana';
+  const subtitle = document.createElement('div');
+  subtitle.className = 'albert-env-readout';
+  subtitle.style.margin = '0';
+  subtitle.textContent = 'Stream live k6 metrics to InfluxDB while the sim run.';
+  titleWrap.append(title, subtitle);
+
+  const toggleLabel = document.createElement('label');
+  toggleLabel.className = 'albert-sim-apm-toggle';
+  const toggle = document.createElement('input');
+  toggle.type = 'checkbox';
+  toggle.checked = enabled;
+  toggle.disabled = locked;
+  toggle.onchange = () =>
+    store.mutate(() => {
+      store.file.streaming = toggle.checked ? { provider: 'influxdb', url: 'http://localhost:8086/k6' } : undefined;
+    });
+  toggleLabel.append(toggle, document.createTextNode(' Enabled'));
+
+  header.append(titleWrap, toggleLabel);
+  panel.appendChild(header);
+
+  if (store.file.streaming) {
+    const body = document.createElement('div');
+    body.className = 'albert-sim-apm-body';
+
+    const urlInput = document.createElement('input');
+    urlInput.type = 'text';
+    urlInput.value = store.file.streaming.url;
+    urlInput.disabled = locked;
+    urlInput.placeholder = 'http://localhost:8086/k6';
+    urlInput.style.width = '220px';
+    urlInput.oninput = () => store.mutateQuiet(() => store.file.streaming && (store.file.streaming.url = urlInput.value));
+
+    body.append(labeled('Provider', readonlyText('InfluxDB')), labeled('URL', urlInput));
+    panel.appendChild(body);
+  }
+
+  return panel;
+}
+
+function readonlyText(value: string): HTMLElement {
+  const span = document.createElement('span');
+  span.className = 'albert-sim-apm-readonly';
+  span.textContent = value;
+  return span;
+}
+
+function renderPlannedPreview(): HTMLElement {
   const wrap = document.createElement('div');
   const enabledFlows = store.file.flows.filter((f) => f.enabled);
-  const hasResults = store.running || store.ticks.length > 0 || !!store.summary || !!store.error;
-  if (enabledFlows.length === 0 && !hasResults) return wrap;
+  if (enabledFlows.length === 0) return wrap;
 
-  // One switcher drives both the planned-load preview and the actual results.
-  wrap.appendChild(renderViewSwitcher());
-
-  if (enabledFlows.length > 0) wrap.appendChild(renderPreviewPanel(enabledFlows));
-  if (hasResults) wrap.appendChild(renderResultsPanel());
-
-  return wrap;
-}
-
-function renderPreviewPanel(enabledFlows: SimFlowEntry[]): HTMLElement {
-  const wrap = document.createElement('div');
   wrap.className = 'albert-flow-results';
+
+  const headingRow = document.createElement('div');
+  headingRow.className = 'albert-sim-preview-heading';
 
   const heading = document.createElement('div');
   heading.className = 'albert-section-title';
+  heading.style.marginBottom = '0';
   heading.textContent = 'Planned load (preview)';
-  wrap.appendChild(heading);
+  headingRow.appendChild(heading);
 
-  if (store.resultView === 'xy') wrap.appendChild(renderPlannedXY(enabledFlows));
-  else if (store.resultView === 'table') wrap.appendChild(renderPlannedTable(enabledFlows));
-  else wrap.appendChild(renderPlannedSankey(enabledFlows));
+  const refreshBtn = document.createElement('button');
+  refreshBtn.className = 'secondary';
+  refreshBtn.textContent = '↻ Refresh preview';
+  refreshBtn.title = 'Recompute the preview from the current field values';
+  refreshBtn.onclick = () => store.refresh();
+  headingRow.appendChild(refreshBtn);
 
+  wrap.appendChild(headingRow);
+
+  wrap.appendChild(renderSimGrid(renderPlannedXY(enabledFlows), renderPlannedSankey(enabledFlows), renderPlannedTable(enabledFlows)));
   return wrap;
 }
 
-function renderResultsPanel(): HTMLElement {
+function renderExecutionReport(): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'albert-flow-results';
+  const hasResults = store.running || store.ticks.length > 0 || !!store.summary || !!store.error;
 
   const heading = document.createElement('div');
   heading.className = 'albert-section-title';
-  heading.textContent = store.running ? 'Live results (running…)' : 'Results';
+  heading.textContent = store.running ? 'Execution report (running…)' : 'Execution report';
   wrap.appendChild(heading);
+
+  if (!hasResults) {
+    const empty = document.createElement('div');
+    empty.className = 'albert-empty';
+    empty.textContent = 'Run the sim from the Configure tab to see results here.';
+    wrap.appendChild(empty);
+    return wrap;
+  }
 
   if (store.error) {
     const err = document.createElement('div');
@@ -244,9 +387,7 @@ function renderResultsPanel(): HTMLElement {
     wrap.appendChild(err);
   }
 
-  if (store.resultView === 'xy') wrap.appendChild(renderXYView());
-  else if (store.resultView === 'table') wrap.appendChild(renderTableView());
-  else wrap.appendChild(renderSankeyView());
+  wrap.appendChild(renderSimGrid(renderXYView(), renderSankeyView(), renderTableView()));
 
   if (store.summary?.apmExport) {
     const apm = document.createElement('div');
@@ -255,6 +396,27 @@ function renderResultsPanel(): HTMLElement {
     wrap.appendChild(apm);
   }
 
+  if (store.ablogPath) {
+    const logNote = document.createElement('div');
+    logNote.className = 'albert-env-readout';
+    logNote.textContent = `Log saved to ${store.ablogPath}`;
+    wrap.appendChild(logNote);
+  }
+
+  return wrap;
+}
+
+/** Fixed layout shared by the planned-load preview and the execution report: XY top-left, Sankey
+ *  top-right, table spanning the full width underneath. */
+function renderSimGrid(xy: HTMLElement, sankey: HTMLElement, table: HTMLElement): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'albert-sim-grid';
+
+  const top = document.createElement('div');
+  top.className = 'albert-sim-grid-top';
+  top.append(xy, sankey);
+
+  wrap.append(top, table);
   return wrap;
 }
 
@@ -268,26 +430,34 @@ function flowEntryLabel(entry: SimFlowEntry, index: number): string {
 
 function renderPlannedXY(enabledFlows: SimFlowEntry[]): HTMLElement {
   const wrap = document.createElement('div');
-  const plans = enabledFlows.map((e) => planLoad(store.file.profile, e.targetTps));
-  const maxDuration = Math.max(1, ...plans.map(totalDurationSec));
+  const scheduled: ScheduledPlan[] = enabledFlows.map((e) => ({ plan: planLoad(e.profile, e.targetTps), startAtSec: e.startAtSec }));
+  const span = combinedSpanSec(scheduled);
 
   const series: LineSeries[] = enabledFlows.map((entry, i) => ({
     name: flowEntryLabel(entry, i),
     color: PALETTE[i % PALETTE.length],
-    values: sampleRateCurve(plans[i]).map((p) => p.rate),
+    values: sampleScheduledCurve(scheduled[i], span).map((p) => p.rate),
   }));
-  wrap.appendChild(lineChart('Planned throughput over time (req/s)', series, { yFormat: (n) => `${Math.round(n)}` }));
+  if (enabledFlows.length > 1) {
+    series.push({
+      name: 'Total',
+      color: '#888888',
+      dashed: true,
+      values: sumScheduledCurves(scheduled, span).map((p) => p.rate),
+    });
+  }
+  wrap.appendChild(lineChart('Planned throughput over time (req/s)', series, { yFormat: (n) => `${Math.round(n)}`, xMax: span }));
 
   const note = document.createElement('div');
   note.className = 'albert-env-readout';
-  note.textContent = `Profile: ${store.file.profile.type} · ~${maxDuration}s · combined target ${enabledFlows.reduce((s, f) => s + f.targetTps, 0)} req/s`;
+  note.textContent = `~${formatDurationSec(span)} sim span · combined target ${enabledFlows.reduce((s, f) => s + f.targetTps, 0)} req/s`;
   wrap.appendChild(note);
   return wrap;
 }
 
 function renderPlannedSankey(enabledFlows: SimFlowEntry[]): HTMLElement {
   const wrap = document.createElement('div');
-  const planned = enabledFlows.map((e) => plannedRequests(planLoad(store.file.profile, e.targetTps)));
+  const planned = enabledFlows.map((e) => plannedRequests(planLoad(e.profile, e.targetTps)));
   const total = planned.reduce((s, n) => s + n, 0);
 
   if (total === 0) {
@@ -316,17 +486,21 @@ function renderPlannedTable(enabledFlows: SimFlowEntry[]): HTMLElement {
   const table = document.createElement('table');
   table.className = 'albert-sim-summary';
   table.innerHTML = `<thead><tr>
-    <th>Flow</th><th>Target TPS</th><th>Profile</th><th>Duration</th><th>Planned requests</th>
+    <th>Flow</th><th>Start at</th><th>Target TPS</th><th>Ramp up</th><th>Hold</th><th>Ramp down</th><th>Ends at</th><th>Planned requests</th>
   </tr></thead>`;
   const tbody = document.createElement('tbody');
+  const plans = enabledFlows.map((e) => planLoad(e.profile, e.targetTps));
   enabledFlows.forEach((entry, i) => {
-    const plan = planLoad(store.file.profile, entry.targetTps);
+    const plan = plans[i];
     const tr = document.createElement('tr');
     for (const c of [
       flowEntryLabel(entry, i),
+      formatDurationSec(entry.startAtSec),
       String(entry.targetTps),
-      store.file.profile.type,
-      `${totalDurationSec(plan)}s`,
+      formatDurationSec(entry.profile.rampUpSec),
+      formatDurationSec(entry.profile.holdSec),
+      formatDurationSec(entry.profile.rampDownSec),
+      formatDurationSec(entry.startAtSec + totalDurationSec(plan)),
       `~${plannedRequests(plan)}`,
     ]) {
       const td = document.createElement('td');
@@ -336,26 +510,24 @@ function renderPlannedTable(enabledFlows: SimFlowEntry[]): HTMLElement {
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
+
+  const totalTps = enabledFlows.reduce((s, f) => s + f.targetTps, 0);
+  const span = combinedSpanSec(enabledFlows.map((e, i) => ({ plan: plans[i], startAtSec: e.startAtSec })));
+  const totalPlanned = plans.reduce((s, p) => s + plannedRequests(p), 0);
+
+  const tfoot = document.createElement('tfoot');
+  const totalRow = document.createElement('tr');
+  totalRow.className = 'albert-sim-summary-total';
+  for (const c of ['Total', '—', String(totalTps), '—', '—', '—', formatDurationSec(span), `~${totalPlanned}`]) {
+    const td = document.createElement('td');
+    td.textContent = c;
+    totalRow.appendChild(td);
+  }
+  tfoot.appendChild(totalRow);
+  table.appendChild(tfoot);
+
   wrap.appendChild(table);
   return wrap;
-}
-
-function renderViewSwitcher(): HTMLElement {
-  const bar = document.createElement('div');
-  bar.className = 'albert-sim-view-switcher';
-  const views: { id: 'xy' | 'sankey' | 'table'; label: string }[] = [
-    { id: 'xy', label: 'XY chart' },
-    { id: 'sankey', label: 'Sankey' },
-    { id: 'table', label: 'Table' },
-  ];
-  for (const v of views) {
-    const btn = document.createElement('button');
-    btn.textContent = v.label;
-    btn.className = store.resultView === v.id ? '' : 'secondary';
-    btn.onclick = () => store.setResultView(v.id);
-    bar.appendChild(btn);
-  }
-  return bar;
 }
 
 /** Per-flow summary data for the table/sankey views: the final summary if present, otherwise derived
@@ -396,26 +568,28 @@ function renderXYView(): HTMLElement {
   const wrap = document.createElement('div');
   const keys = scenarioKeys();
 
+  const xMax = store.ticks.length ? store.ticks[store.ticks.length - 1].tSec : 0;
+
   const tpsSeries: LineSeries[] = keys.map((key, i) => ({
     name: store.scenarioLabel(key),
     color: PALETTE[i % PALETTE.length],
     values: store.ticks.map((t) => t.scenarios.find((s) => s.key === key)?.tps ?? 0),
   }));
-  wrap.appendChild(lineChart('Throughput (req/s)', tpsSeries, { yLabel: 'req/s' }));
+  wrap.appendChild(lineChart('Throughput (req/s)', tpsSeries, { yLabel: 'req/s', xMax }));
 
   const latSeries: LineSeries[] = keys.map((key, i) => ({
     name: store.scenarioLabel(key),
     color: PALETTE[i % PALETTE.length],
     values: store.ticks.map((t) => t.scenarios.find((s) => s.key === key)?.p95 ?? 0),
   }));
-  wrap.appendChild(lineChart('p95 latency (ms)', latSeries, { yFormat: (n) => `${Math.round(n)}` }));
+  wrap.appendChild(lineChart('p95 latency (ms)', latSeries, { yFormat: (n) => `${Math.round(n)}`, xMax }));
 
   const errSeries: LineSeries[] = keys.map((key, i) => ({
     name: store.scenarioLabel(key),
     color: PALETTE[i % PALETTE.length],
     values: store.ticks.map((t) => (t.scenarios.find((s) => s.key === key)?.errorRate ?? 0) * 100),
   }));
-  wrap.appendChild(lineChart('Error rate (%)', errSeries, { yMax: 100, yFormat: (n) => `${Math.round(n)}%` }));
+  wrap.appendChild(lineChart('Error rate (%)', errSeries, { yMax: 100, yFormat: (n) => `${Math.round(n)}%`, xMax }));
 
   const scenarios = effectiveScenarios();
   if (scenarios.length) {
@@ -538,13 +712,14 @@ function scenarioKeys(): string[] {
   return [...keys];
 }
 
-function numberField(label: string, value: number, onChange: (v: number) => void): HTMLElement {
+function numberField(label: string, value: number, onChange: (v: number) => void, disabled = false, min = 0): HTMLElement {
   const input = document.createElement('input');
   input.type = 'number';
-  input.min = '1';
+  input.min = String(min);
   input.value = String(value);
+  input.disabled = disabled;
   input.style.width = '80px';
-  input.oninput = () => onChange(Math.max(0, Number(input.value) || 0));
+  input.oninput = () => onChange(Math.max(min, Number(input.value) || 0));
   return labeled(label, input);
 }
 
@@ -555,4 +730,59 @@ function labeled(label: string, control: HTMLElement): HTMLElement {
   span.textContent = label;
   wrap.append(span, control);
   return wrap;
+}
+
+/** Parses a duration like "30s", "10m", "1h", or a compound "1h 12m 30s"; a bare number is seconds. */
+export function parseDurationSec(text: string): number | null {
+  const trimmed = text.trim().toLowerCase();
+  if (!trimmed) return null;
+  if (/^\d+(?:\.\d+)?$/.test(trimmed)) return Math.max(0, Math.round(parseFloat(trimmed)));
+
+  let total = 0;
+  for (const token of trimmed.split(/\s+/)) {
+    const m = token.match(/^(\d+(?:\.\d+)?)(h|m|s)$/);
+    if (!m) return null;
+    const value = parseFloat(m[1]);
+    total += m[2] === 'h' ? value * 3600 : m[2] === 'm' ? value * 60 : value;
+  }
+  return Math.max(0, Math.round(total));
+}
+
+/** Formats a duration in seconds as a compound "1h 12m 30s" string, omitting zero components
+ *  (e.g. 90 -> "1m 30s", 3600 -> "1h"); zero itself renders as "0s". */
+export function formatDurationSec(totalSeconds: number): string {
+  const s = Math.max(0, Math.round(totalSeconds));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  const parts: string[] = [];
+  if (h > 0) parts.push(`${h}h`);
+  if (m > 0) parts.push(`${m}m`);
+  if (sec > 0 || parts.length === 0) parts.push(`${sec}s`);
+  return parts.join(' ');
+}
+
+/** A text field accepting durations as "30s", "10m", "1h", or a compound "1h 12m 30s"; normalizes
+ *  its display on blur. */
+function durationField(label: string, value: number, onChange: (v: number) => void, disabled = false): HTMLElement {
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = formatDurationSec(value);
+  input.disabled = disabled;
+  input.placeholder = '1h 12m 30s';
+  input.title = 'Enter a duration like 30s, 10m, 1h, or a compound 1h 12m 30s';
+  input.style.width = '90px';
+
+  let lastValid = value;
+  input.oninput = () => {
+    const parsed = parseDurationSec(input.value);
+    if (parsed !== null) {
+      lastValid = parsed;
+      onChange(parsed);
+    }
+  };
+  input.onblur = () => {
+    input.value = formatDurationSec(lastValid);
+  };
+  return labeled(label, input);
 }

@@ -1,6 +1,6 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { ApmConfig, KeyValueEntry, SimProfile, SimScenarioMeta } from '../model/types';
+import { ApmConfig, KeyValueEntry, SimScenarioMeta, StreamingConfig } from '../model/types';
 import { parseEnvConfigFile, parseFlowFile, parseRequestFile, parseSimFile } from '../model/parse';
 import { ResolvedFlowStep } from './generateFlowScript';
 import { ResolvedSimFlow } from './generateSimScript';
@@ -20,7 +20,7 @@ export async function resolveFlow(flowPath: string): Promise<{ name: string; ste
 
 export async function resolveSim(
   simPath: string
-): Promise<{ name: string; profile: SimProfile; flows: ResolvedSimFlow[]; metas: SimScenarioMeta[]; apm?: ApmConfig }> {
+): Promise<{ name: string; flows: ResolvedSimFlow[]; metas: SimScenarioMeta[]; apm?: ApmConfig; streaming?: StreamingConfig }> {
   const sim = parseSimFile(await readText(simPath));
   if (!sim) throw new Error(`Not a valid .abl sim file: ${simPath}`);
   const simDir = path.dirname(path.resolve(simPath));
@@ -36,11 +36,11 @@ export async function resolveSim(
     const steps = await resolveFlowSteps(path.dirname(flowAbs), flow.steps);
     const key = scenarioKey(entry.id);
     const label = flow.name || entry.flowPath;
-    flows.push({ key, label, targetTps: entry.targetTps, steps });
+    flows.push({ key, label, targetTps: entry.targetTps, profile: entry.profile, startAtSec: entry.startAtSec, steps });
     metas.push({ key, label, targetTps: entry.targetTps });
   }
   if (flows.length === 0) throw new Error('Sim has no enabled flows.');
-  return { name: sim.name, profile: sim.profile, flows, metas, apm: sim.apm };
+  return { name: sim.name, flows, metas, apm: sim.apm, streaming: sim.streaming };
 }
 
 async function resolveFlowSteps(flowDir: string, steps: { enabled: boolean; requestPath: string; name: string }[]): Promise<ResolvedFlowStep[]> {

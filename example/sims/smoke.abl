@@ -2,9 +2,30 @@
   "albertType": "sim",
   "albertVersion": 1,
   "name": "Smoke load",
-  "profile": { "type": "load", "durationSec": 30, "rampUpSec": 5 },
   "flows": [
-    { "id": "f_journey", "flowPath": "../flows/user-journey.abf", "targetTps": 5, "enabled": true },
-    { "id": "f_browse", "flowPath": "../flows/browse.abf", "targetTps": 20, "enabled": true }
+    {
+      "id": "f_journey",
+      "flowPath": "../flows/user-journey.abf",
+      "targetTps": 5,
+      "profile": {
+        "rampUpSec": 5,
+        "holdSec": 20,
+        "rampDownSec": 5
+      },
+      "startAtSec": 0,
+      "enabled": true
+    },
+    {
+      "id": "f_browse",
+      "flowPath": "../flows/browse.abf",
+      "targetTps": 20,
+      "profile": {
+        "rampUpSec": 0,
+        "holdSec": 15,
+        "rampDownSec": 0
+      },
+      "startAtSec": 10,
+      "enabled": true
+    }
   ]
 }

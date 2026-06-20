@@ -2,37 +2,40 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Albert Simulation",
   "type": "object",
-  "required": ["albertType", "albertVersion", "name", "profile", "flows"],
+  "required": ["albertType", "albertVersion", "name", "flows"],
   "additionalProperties": false,
   "properties": {
     "albertType": { "const": "sim" },
     "albertVersion": { "const": 1 },
     "name": { "type": "string" },
-    "profile": {
-      "type": "object",
-      "required": ["type", "durationSec"],
-      "additionalProperties": false,
-      "properties": {
-        "type": { "enum": ["constant", "load", "stress", "spike", "soak"] },
-        "durationSec": { "type": "number" },
-        "rampUpSec": { "type": "number" }
-      }
-    },
     "flows": {
       "type": "array",
       "items": { "$ref": "#/definitions/simFlowEntry" }
     },
-    "apm": { "$ref": "#/definitions/apmConfig" }
+    "apm": { "$ref": "#/definitions/apmConfig" },
+    "streaming": { "$ref": "#/definitions/streamingConfig" }
   },
   "definitions": {
+    "simProfile": {
+      "type": "object",
+      "required": ["rampUpSec", "holdSec", "rampDownSec"],
+      "additionalProperties": false,
+      "properties": {
+        "rampUpSec": { "type": "number" },
+        "holdSec": { "type": "number" },
+        "rampDownSec": { "type": "number" }
+      }
+    },
     "simFlowEntry": {
       "type": "object",
-      "required": ["id", "flowPath", "targetTps", "enabled"],
+      "required": ["id", "flowPath", "targetTps", "profile", "startAtSec", "enabled"],
       "additionalProperties": false,
       "properties": {
         "id": { "type": "string" },
         "flowPath": { "type": "string" },
         "targetTps": { "type": "number" },
+        "profile": { "$ref": "#/definitions/simProfile" },
+        "startAtSec": { "type": "number" },
         "enabled": { "type": "boolean" }
       }
     },
@@ -43,6 +46,15 @@
       "properties": {
         "provider": { "enum": ["newrelic"] },
         "region": { "enum": ["US", "EU"] }
+      }
+    },
+    "streamingConfig": {
+      "type": "object",
+      "required": ["provider", "url"],
+      "additionalProperties": false,
+      "properties": {
+        "provider": { "enum": ["influxdb"] },
+        "url": { "type": "string" }
       }
     }
   }

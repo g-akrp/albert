@@ -16,6 +16,7 @@ run options:
   --influx <url>       Stream k6 metrics to InfluxDB 1.8 (e.g. http://localhost:8086/k6)
   --serve [--port N]   Also serve live results in the browser (default port 7070)
   --k6 <path>          Use a specific k6 binary (else ALBERT_K6_PATH or auto-download)
+  --quick              Skip the load-plan confirmation prompt for .abl sims
 `;
 
 async function main(argv: string[]): Promise<number> {
@@ -41,6 +42,7 @@ async function main(argv: string[]): Promise<number> {
         serve: hasFlag(rest, '--serve'),
         port: numberFlag(rest, '--port'),
         k6: flagValue(rest, '--k6'),
+        quick: hasFlag(rest, '--quick'),
       };
       return runCommand(opts);
     }
