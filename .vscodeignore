@@ -1,11 +1,14 @@
 .vscode/**
 .claude/**
 .cocoindex_code/**
+.agent/**
+.albert_built/**
 src/**
 .gitignore
 esbuild.js
 tsconfig.json
 opencode.json
+STATUS.md
 **/*.map
 **/.eslintrc*
 node_modules/**
