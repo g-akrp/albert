@@ -10,6 +10,7 @@ import {
 } from '../../model/types';
 import { getVsCodeApi } from '../vscodeApi';
 import { collectScriptDiagnostics } from '../components/monacoSetup';
+import { buildResultMarkdown } from './resultMarkdown';
 
 export const vscodeApi = getVsCodeApi<RequestWebviewToHostMessage>();
 
@@ -89,6 +90,20 @@ class RequestStore {
 
   cancelSend(): void {
     vscodeApi.postMessage({ type: 'cancelRequest' });
+  }
+
+  saveResultMarkdown(): void {
+    if (!this.lastResult) return;
+    const markdown = buildResultMarkdown(
+      this.file.name,
+      this.lastRequestUsed,
+      this.lastResult,
+      this.lastTestRunSource === 'live' ? this.lastTestRun : null,
+      this.file.scripts.postResponse,
+      this.file.schemaValidation.schema
+    );
+    const suggestedName = (this.file.name || 'request').replace(/[\\/:*?"<>|]/g, '_') + '-result.md';
+    vscodeApi.postMessage({ type: 'saveMarkdown', markdown, suggestedName });
   }
 
   runAgainstSample(): void {

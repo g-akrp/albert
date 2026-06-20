@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as crypto from 'crypto';
+import * as path from 'path';
 import * as jsonc from 'jsonc-parser';
 import { DiagnosticItem, RequestFile, RequestHostToWebviewMessage, RequestWebviewToHostMessage } from '../model/types';
 import { resolveRequestForDisplay, resolveRequestPreview, sendRequest } from '../http/httpClient';
@@ -106,6 +107,10 @@ export class RequestEditorProvider implements vscode.CustomTextEditorProvider {
           this.activeSends.get(docKey)?.abort();
           break;
         }
+        case 'saveMarkdown': {
+          await this.handleSaveMarkdown(document, message.markdown, message.suggestedName);
+          break;
+        }
         case 'runAgainstSample': {
           const parsed = tryParseRequestFile(document.getText());
           if (!parsed) {
@@ -196,6 +201,31 @@ export class RequestEditorProvider implements vscode.CustomTextEditorProvider {
     );
     await this.activeEnvironment.applyVariableChanges(environmentChanges);
     postToWebview({ type: 'sampleTestResult', testRun });
+  }
+
+  private async handleSaveMarkdown(
+    document: vscode.TextDocument,
+    markdown: string,
+    suggestedName: string
+  ): Promise<void> {
+    const defaultUri = vscode.Uri.file(path.join(path.dirname(document.uri.fsPath), suggestedName));
+    const target = await vscode.window.showSaveDialog({
+      defaultUri,
+      filters: { Markdown: ['md'] },
+      saveLabel: 'Save result as Markdown',
+    });
+    if (!target) return;
+    try {
+      await vscode.workspace.fs.writeFile(target, Buffer.from(markdown, 'utf8'));
+    } catch (err: any) {
+      vscode.window.showErrorMessage(`Albert: failed to save result: ${err?.message ?? err}`);
+      return;
+    }
+    const open = await vscode.window.showInformationMessage(
+      `Albert: saved result to ${path.basename(target.fsPath)}.`,
+      'Open'
+    );
+    if (open === 'Open') await vscode.commands.executeCommand('vscode.open', target);
   }
 
   private async applyEditFromWebview(

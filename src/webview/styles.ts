@@ -28,6 +28,8 @@ export function injectStyles(): void {
     .akrp-empty { color: var(--vscode-descriptionForeground); padding: 8px; }
     .akrp-response { margin-top: 14px; border-top: 1px solid var(--vscode-panel-border); padding-top: 10px; }
     .akrp-response-status { font-weight: 600; margin-bottom: 6px; }
+    .akrp-response-statusrow { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+    .akrp-response-statusrow .akrp-response-status { margin-bottom: 0; }
     .akrp-response-status.ok { color: var(--vscode-testing-iconPassed, #2cbb4b); }
     .akrp-response-status.err { color: var(--vscode-testing-iconFailed, #d9534f); }
     .akrp-response pre { background: var(--vscode-textCodeBlock-background); padding: 8px; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }

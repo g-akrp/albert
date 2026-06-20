@@ -21,7 +21,7 @@ import { renderResponseTab } from './ResponseTab';
 import { renderHistoryTab } from './HistoryTab';
 import { genId, store } from './state';
 
-type TabId = 'headers' | 'query' | 'body' | 'auth' | 'preview' | 'expect' | 'schema' | 'scripts' | 'response' | 'history';
+type TabId = 'headers' | 'query' | 'body' | 'auth' | 'preview' | 'expect' | 'schema' | 'scripts' | 'sample' | 'response' | 'history';
 
 let activeTab: TabId = 'headers';
 
@@ -64,6 +64,7 @@ export function renderTabs(container: HTMLElement): void {
         { id: 'expect', label: 'Expect' },
         { id: 'schema', label: 'Schema' },
         { id: 'scripts', label: 'Scripts' },
+        { id: 'sample', label: 'Sample' },
         { id: 'response', label: 'Response' },
       ],
     },
@@ -134,6 +135,9 @@ export function renderTabs(container: HTMLElement): void {
       break;
     case 'scripts':
       renderScriptsTab(content);
+      break;
+    case 'sample':
+      renderSampleTab(content);
       break;
     case 'response':
       renderResponseTab(container, content);
@@ -578,6 +582,10 @@ function renderScriptsTab(container: HTMLElement): void {
   container.appendChild(postTitleRow);
   container.appendChild(postContainer);
 
+  appendRunAgainstSample(container);
+}
+
+function renderSampleTab(container: HTMLElement): void {
   const sampleTitleRow = document.createElement('div');
   sampleTitleRow.style.display = 'flex';
   sampleTitleRow.style.alignItems = 'center';

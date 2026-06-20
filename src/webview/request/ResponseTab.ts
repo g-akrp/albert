@@ -27,7 +27,16 @@ export function renderResponseTab(outerContainer: HTMLElement, container: HTMLEl
     return;
   }
 
-  container.appendChild(buildStatusBadge(store.lastResult));
+  const statusRow = document.createElement('div');
+  statusRow.className = 'akrp-response-statusrow';
+  statusRow.appendChild(buildStatusBadge(store.lastResult));
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'secondary';
+  saveBtn.textContent = 'Save result as .md';
+  saveBtn.title = 'Export this run (status, tests, request, response, scripts, schema) to a Markdown file';
+  saveBtn.onclick = () => store.saveResultMarkdown();
+  statusRow.appendChild(saveBtn);
+  container.appendChild(statusRow);
 
   const subTabBar = document.createElement('div');
   subTabBar.className = 'akrp-tabs';

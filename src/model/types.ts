@@ -374,6 +374,7 @@ export type RequestWebviewToHostMessage =
   | { type: 'cancelRequest' }
   | { type: 'runAgainstSample' }
   | { type: 'requestPreview' }
+  | { type: 'saveMarkdown'; markdown: string; suggestedName: string }
   | { type: 'diagnostics'; fileUri: string; diagnostics: DiagnosticItem[] };
 
 // --- Webview <-> extension host message protocol: env config editor ---

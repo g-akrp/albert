@@ -12,19 +12,32 @@
       "mode": "json",
       "content": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}"
     },
-    "auth": { "type": "none" }
+    "auth": {
+      "type": "none"
+    }
   },
   "scripts": {
     "preRequest": "console.log('logging in as', environment.get('username'));\n",
     "postResponse": "const body = response.json();\nexpect(body.token).toBeTruthy();\nenvironment.set('token', body.token);\nconsole.log('captured token via post-response script');\n"
   },
   "expectations": [
-    { "id": "e_status", "target": "status", "operator": "equals", "expected": "200" },
-    { "id": "e_token", "target": "body", "path": "token", "operator": "exists", "expected": "" }
+    {
+      "id": "e_status",
+      "target": "status",
+      "operator": "equals",
+      "expected": "200"
+    },
+    {
+      "id": "e_token",
+      "target": "body",
+      "path": "token",
+      "operator": "exists",
+      "expected": ""
+    }
   ],
   "schemaValidation": {
     "enabled": true,
     "schema": "{\n  \"type\": \"object\",\n  \"required\": [\"token\"],\n  \"properties\": {\n    \"token\": { \"type\": \"string\" },\n    \"expiresIn\": { \"type\": \"number\" }\n  }\n}"
   },
-  "sampleResponse": "{\n  \"token\": \"mock-jwt-abc123\",\n  \"expiresIn\": 3600,\n  \"user\": { \"id\": 1, \"name\": \"Ada Lovelace\" }\n}"
+  "sampleResponse": "{\n  \"token\": \"mock-jwt-abc123\",\n  \"expiresIn\": 3600,\n  \"user\": {\n    \"id\": 1,\n    \"name\": \"Ada Lovelace\",\n    \"s\":\"{{apiKey}}\"\n  }\n}"
 }

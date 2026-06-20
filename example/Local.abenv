@@ -3,12 +3,36 @@
   "akrpVersion": 1,
   "name": "Local (WireMock)",
   "variables": [
-    { "name": "baseUrl", "value": "http://localhost:8080", "enabled": true },
-    { "name": "username", "value": "ada", "enabled": true },
-    { "name": "password", "value": "secret", "enabled": true },
-    { "name": "userId", "value": "1", "enabled": true },
-    { "name": "token", "value": "mock-jwt-abc123", "enabled": true },
-    { "name": "apiKey", "value": "demo-key-789", "enabled": true }
+    {
+      "name": "baseUrl",
+      "value": "http://localhost:8080",
+      "enabled": true
+    },
+    {
+      "name": "username",
+      "value": "ada",
+      "enabled": true
+    },
+    {
+      "name": "password",
+      "value": "secret",
+      "enabled": true
+    },
+    {
+      "name": "userId",
+      "value": "1",
+      "enabled": true
+    },
+    {
+      "name": "token",
+      "value": "mock-jwt-abc123",
+      "enabled": true
+    },
+    {
+      "name": "apiKey",
+      "value": "demo-key-789",
+      "enabled": true
+    }
   ],
   "settings": {
     "timeoutMs": 15000,

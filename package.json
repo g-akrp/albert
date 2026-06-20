@@ -2,7 +2,7 @@
   "name": "albert",
   "displayName": "Albert",
   "description": "API request files (.abrq) and environment configs (.abenv) with scripting, assertions, and AJV schema validation.",
-  "version": "0.4.1",
+  "version": "0.4.4",
   "publisher": "g-akrp",
   "engines": {
     "vscode": "^1.90.0"
