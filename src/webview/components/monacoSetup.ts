@@ -134,7 +134,7 @@ export function ensureMonacoInitialized(workerBaseUri: string): typeof monaco {
     noSemanticValidation: false,
     noSyntaxValidation: false,
   });
-  monaco.languages.typescript.javascriptDefaults.addExtraLib(SCRIPT_AMBIENT_TYPES, 'ts:akrp-script-api.d.ts');
+  monaco.languages.typescript.javascriptDefaults.addExtraLib(SCRIPT_AMBIENT_TYPES, 'ts:albert-script-api.d.ts');
   monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
     allowNonTsExtensions: true,
     target: monaco.languages.typescript.ScriptTarget.ES2020,

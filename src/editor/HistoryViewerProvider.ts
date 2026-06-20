@@ -79,7 +79,7 @@ export class HistoryViewerProvider implements vscode.CustomTextEditorProvider {
 export function tryParseHistoryFile(text: string): HistoryFile | null {
   try {
     const parsed = JSON.parse(text);
-    if (parsed && parsed.akrpType === 'history' && parsed.akrpVersion === 1 && Array.isArray(parsed.flowRuns)) {
+    if (parsed && parsed.albertType === 'history' && parsed.albertVersion === 1 && Array.isArray(parsed.flowRuns)) {
       return parsed as HistoryFile;
     }
     return null;

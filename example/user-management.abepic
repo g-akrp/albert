@@ -1,0 +1,10 @@
+{
+  "albertType": "epic",
+  "albertVersion": 1,
+  "name": "User Management",
+  "features": [
+    "User Retrieval",
+    "User Authentication",
+    "User Provisioning"
+  ]
+}

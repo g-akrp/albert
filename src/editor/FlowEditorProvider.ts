@@ -14,6 +14,7 @@ import { ActiveEnvironment } from '../activeEnvironment';
 import { generateFlowScript, ResolvedFlowStep } from '../k6/generateFlowScript';
 import { FlowRunHandle, runFlowOnce } from '../k6/runner';
 import { ensureK6 } from '../k6/binary';
+import { reportFlowToAllure } from '../allure/allureReporter';
 
 export class FlowEditorProvider implements vscode.CustomTextEditorProvider {
   public static readonly viewType = 'albert.flowEditor';
@@ -194,6 +195,7 @@ export class FlowEditorProvider implements vscode.CustomTextEditorProvider {
         request: reqFile.request,
         expectations: reqFile.expectations,
         schemaValidation: reqFile.schemaValidation,
+        allureReportConfig: reqFile.allureReportConfig,
       });
     }
 
@@ -215,7 +217,10 @@ export class FlowEditorProvider implements vscode.CustomTextEditorProvider {
 
     try {
       const handle = await runFlowOnce(k6Path, script, (stepResult) => postToWebview({ type: 'flowStep', result: stepResult }));
-      void handle.result.then((result) => postToWebview({ type: 'flowDone', result }));
+      void handle.result.then((result) => {
+        postToWebview({ type: 'flowDone', result });
+        void reportFlowToAllure(flow.name || 'Flow', document.uri.fsPath, result);
+      });
       return handle;
     } catch (err: any) {
       postToWebview({ type: 'flowDone', result: { ok: false, steps: [], error: err?.message ?? String(err) } });
@@ -228,7 +233,23 @@ export class FlowEditorProvider implements vscode.CustomTextEditorProvider {
       const uri = vscode.Uri.file(path.resolve(flowDir, requestPath));
       const bytes = await vscode.workspace.fs.readFile(uri);
       const parsed = JSON.parse(Buffer.from(bytes).toString('utf8'));
-      if (parsed && parsed.akrpType === 'request' && parsed.request) return parsed as RequestFile;
+      if (parsed && parsed.albertType === 'request' && parsed.request) {
+        if (!parsed.allureReportConfig) {
+          parsed.allureReportConfig = {
+            description: '',
+            severity: 'normal',
+            feature: '',
+            story: '',
+            suite: '',
+            owner: '',
+            tags: [],
+          };
+        }
+        if (!Array.isArray(parsed.allureReportConfig.tags)) {
+          parsed.allureReportConfig.tags = [];
+        }
+        return parsed as RequestFile;
+      }
       return null;
     } catch {
       return null;
@@ -281,7 +302,7 @@ function toRelative(fromDir: string, target: string): string {
 export function tryParseFlowFile(text: string): FlowFile | null {
   try {
     const parsed = JSON.parse(text);
-    if (parsed && parsed.akrpType === 'flow' && parsed.akrpVersion === 1 && Array.isArray(parsed.steps)) {
+    if (parsed && parsed.albertType === 'flow' && parsed.albertVersion === 1 && Array.isArray(parsed.steps)) {
       // tolerate older/hand-edited files missing optional arrays
       for (const s of parsed.steps as FlowStep[]) if (!Array.isArray(s.captures)) s.captures = [];
       return parsed as FlowFile;

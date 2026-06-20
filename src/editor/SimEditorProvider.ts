@@ -210,7 +210,7 @@ export class SimEditorProvider implements vscode.CustomTextEditorProvider {
       const uri = vscode.Uri.file(path.resolve(simDir, flowPath));
       const bytes = await vscode.workspace.fs.readFile(uri);
       const parsed = JSON.parse(Buffer.from(bytes).toString('utf8'));
-      if (parsed && parsed.akrpType === 'flow' && Array.isArray(parsed.steps)) return parsed as FlowFile;
+      if (parsed && parsed.albertType === 'flow' && Array.isArray(parsed.steps)) return parsed as FlowFile;
       return null;
     } catch {
       return null;
@@ -239,7 +239,7 @@ export class SimEditorProvider implements vscode.CustomTextEditorProvider {
       const uri = vscode.Uri.file(path.resolve(flowDir, requestPath));
       const bytes = await vscode.workspace.fs.readFile(uri);
       const parsed = JSON.parse(Buffer.from(bytes).toString('utf8'));
-      if (parsed && parsed.akrpType === 'request' && parsed.request) return parsed as RequestFile;
+      if (parsed && parsed.albertType === 'request' && parsed.request) return parsed as RequestFile;
       return null;
     } catch {
       return null;
@@ -296,7 +296,7 @@ function toRelative(fromDir: string, target: string): string {
 export function tryParseSimFile(text: string): SimFile | null {
   try {
     const parsed = JSON.parse(text);
-    if (parsed && parsed.akrpType === 'sim' && parsed.akrpVersion === 1 && parsed.profile && Array.isArray(parsed.flows)) {
+    if (parsed && parsed.albertType === 'sim' && parsed.albertVersion === 1 && parsed.profile && Array.isArray(parsed.flows)) {
       return parsed as SimFile;
     }
     return null;

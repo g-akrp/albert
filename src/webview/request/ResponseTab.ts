@@ -17,7 +17,7 @@ export function renderResponseTab(outerContainer: HTMLElement, container: HTMLEl
 
   if (store.sending) {
     const status = document.createElement('div');
-    status.className = 'akrp-response';
+    status.className = 'albert-response';
     status.textContent = 'Sending request...';
     container.appendChild(status);
     return;
@@ -25,14 +25,14 @@ export function renderResponseTab(outerContainer: HTMLElement, container: HTMLEl
 
   if (!store.lastResult) {
     const empty = document.createElement('div');
-    empty.className = 'akrp-empty';
+    empty.className = 'albert-empty';
     empty.textContent = 'No response yet. Click Send to make a request.';
     container.appendChild(empty);
     return;
   }
 
   const statusRow = document.createElement('div');
-  statusRow.className = 'akrp-response-statusrow';
+  statusRow.className = 'albert-response-statusrow';
   statusRow.appendChild(buildStatusBadge(store.lastResult));
   const saveBtn = document.createElement('button');
   saveBtn.className = 'secondary';
@@ -43,7 +43,7 @@ export function renderResponseTab(outerContainer: HTMLElement, container: HTMLEl
   container.appendChild(statusRow);
 
   const subTabBar = document.createElement('div');
-  subTabBar.className = 'akrp-tabs';
+  subTabBar.className = 'albert-tabs';
   const subTabs: { id: ResponseSubTabId; label: string }[] = [
     { id: 'body', label: 'Body' },
     { id: 'headers', label: 'Headers' },
@@ -52,7 +52,7 @@ export function renderResponseTab(outerContainer: HTMLElement, container: HTMLEl
   ];
   for (const tab of subTabs) {
     const el = document.createElement('div');
-    el.className = 'akrp-tab' + (tab.id === activeSubTab ? ' active' : '');
+    el.className = 'albert-tab' + (tab.id === activeSubTab ? ' active' : '');
     el.textContent = tab.label;
     el.onclick = () => {
       activeSubTab = tab.id;
@@ -83,7 +83,7 @@ export function renderResponseTab(outerContainer: HTMLElement, container: HTMLEl
 function buildStatusBadge(result: SendResult): HTMLElement {
   const badge = document.createElement('div');
   const ok = !result.error && result.status >= 200 && result.status < 400;
-  badge.className = 'akrp-response-status ' + (ok ? 'ok' : 'err');
+  badge.className = 'albert-response-status ' + (ok ? 'ok' : 'err');
   badge.textContent = result.error ? `Error: ${result.error}` : `${result.status} ${result.statusText} — ${result.timeMs}ms`;
   return badge;
 }
@@ -126,7 +126,7 @@ function renderTestsSubTab(container: HTMLElement): void {
     renderTestResults(container, store.lastTestRun);
   } else {
     const empty = document.createElement('div');
-    empty.className = 'akrp-empty';
+    empty.className = 'albert-empty';
     empty.textContent = 'No test results for this response.';
     container.appendChild(empty);
   }
@@ -137,7 +137,7 @@ function renderRequestSubTab(container: HTMLElement): void {
     renderResolvedRequestBlocks(container, store.lastRequestUsed);
   } else {
     const empty = document.createElement('div');
-    empty.className = 'akrp-empty';
+    empty.className = 'albert-empty';
     empty.textContent = 'No request info available.';
     container.appendChild(empty);
   }

@@ -120,6 +120,9 @@ async function runFlow(file: string, variables: KeyValueEntry[], opts: RunOption
     if (step.error) console.log(`      ✗ ${step.error}`);
   });
   const result = await handle.result;
+  console.log('--- k6 summary output start ---');
+  console.log(result.summary);
+  console.log('--- k6 summary output end ---');
   if (result.error) console.log(`  ${result.error}`);
   console.log(result.ok ? '  ✓ Flow passed' : '  ✗ Flow had failures');
   return { ok: result.ok };

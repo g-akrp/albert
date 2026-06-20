@@ -88,23 +88,36 @@ export interface TestRunResult {
   scriptError?: string;
 }
 
+export interface AllureReportConfig {
+  description: string;
+  severity: 'blocker' | 'critical' | 'normal' | 'minor' | 'trivial';
+  feature: string;
+  story: string;
+  suite: string;
+  owner: string;
+  tags: string[];
+  epicPath?: string;
+  featurePath?: string;
+}
+
 // --- Request file (.abrq) ---
 
 export interface RequestFile {
-  akrpType: 'request';
-  akrpVersion: 1;
+  albertType: 'request';
+  albertVersion: 1;
   name: string;
   request: RequestDetails;
   scripts: RequestScripts;
   expectations: ExpectAssertion[];
   schemaValidation: SchemaValidationConfig;
   sampleResponse: string;
+  allureReportConfig: AllureReportConfig;
 }
 
 export function createEmptyRequestFile(name: string): RequestFile {
   return {
-    akrpType: 'request',
-    akrpVersion: 1,
+    albertType: 'request',
+    albertVersion: 1,
     name,
     request: {
       method: 'GET',
@@ -119,6 +132,17 @@ export function createEmptyRequestFile(name: string): RequestFile {
     expectations: [],
     schemaValidation: { enabled: false, schema: '' },
     sampleResponse: '',
+    allureReportConfig: {
+      description: '',
+      severity: 'normal',
+      feature: '',
+      story: '',
+      suite: '',
+      owner: '',
+      tags: [],
+      epicPath: '',
+      featurePath: '',
+    },
   };
 }
 
@@ -144,14 +168,14 @@ export interface FlowStep {
 }
 
 export interface FlowFile {
-  akrpType: 'flow';
-  akrpVersion: 1;
+  albertType: 'flow';
+  albertVersion: 1;
   name: string;
   steps: FlowStep[];
 }
 
 export function createEmptyFlowFile(name: string): FlowFile {
-  return { akrpType: 'flow', akrpVersion: 1, name, steps: [] };
+  return { albertType: 'flow', albertVersion: 1, name, steps: [] };
 }
 
 export interface FlowCheckResult {
@@ -169,6 +193,11 @@ export interface FlowStepResult {
   checks: FlowCheckResult[];
   bodyPreview: string;
   error?: string;
+  capturedValues?: Record<string, string>;
+  allureReportConfig?: AllureReportConfig;
+  requestHeaders?: Record<string, string>;
+  requestBody?: string;
+  responseHeaders?: Record<string, string>;
 }
 
 export interface FlowRunResult {
@@ -189,15 +218,15 @@ export interface FlowRunHistoryEntry {
 }
 
 export interface HistoryFile {
-  akrpType: 'history';
-  akrpVersion: 1;
+  albertType: 'history';
+  albertVersion: 1;
   name: string;
   kind: 'flow';
   flowRuns: FlowRunHistoryEntry[];
 }
 
 export function createHistoryFile(name: string, flowRuns: FlowRunHistoryEntry[]): HistoryFile {
-  return { akrpType: 'history', akrpVersion: 1, name, kind: 'flow', flowRuns };
+  return { albertType: 'history', albertVersion: 1, name, kind: 'flow', flowRuns };
 }
 
 // --- Simulation file (.abl) ---
@@ -227,8 +256,8 @@ export interface ApmConfig {
 }
 
 export interface SimFile {
-  akrpType: 'sim';
-  akrpVersion: 1;
+  albertType: 'sim';
+  albertVersion: 1;
   name: string;
   profile: SimProfile;
   flows: SimFlowEntry[];
@@ -237,8 +266,8 @@ export interface SimFile {
 
 export function createEmptySimFile(name: string): SimFile {
   return {
-    akrpType: 'sim',
-    akrpVersion: 1,
+    albertType: 'sim',
+    albertVersion: 1,
     name,
     profile: { type: 'load', durationSec: 60, rampUpSec: 10 },
     flows: [],
@@ -301,8 +330,8 @@ export interface EnvSettings {
 }
 
 export interface EnvConfigFile {
-  akrpType: 'env_config';
-  akrpVersion: 1;
+  albertType: 'env_config';
+  albertVersion: 1;
   name: string;
   variables: KeyValueEntry[];
   settings: EnvSettings;
@@ -310,8 +339,8 @@ export interface EnvConfigFile {
 
 export function createEmptyEnvConfigFile(name: string): EnvConfigFile {
   return {
-    akrpType: 'env_config',
-    akrpVersion: 1,
+    albertType: 'env_config',
+    albertVersion: 1,
     name,
     variables: [],
     settings: { timeoutMs: 30000, followRedirects: true },
@@ -359,12 +388,14 @@ export interface EnvVariable {
 // --- Webview <-> extension host message protocol: request editor ---
 
 export type RequestHostToWebviewMessage =
-  | { type: 'init'; file: RequestFile; fileUri: string; activeEnvName: string | null; envVariableNames: string[]; envVariables: EnvVariable[] }
-  | { type: 'documentChanged'; file: RequestFile }
+  | { type: 'init'; file: RequestFile; fileUri: string; activeEnvName: string | null; envVariableNames: string[]; envVariables: EnvVariable[]; allureStories?: string[] }
+  | { type: 'documentChanged'; file: RequestFile; allureStories?: string[] }
   | { type: 'activeEnvironmentChanged'; activeEnvName: string | null; envVariableNames: string[]; envVariables: EnvVariable[] }
   | { type: 'responseResult'; result: SendResult; testRun: TestRunResult; request: ResolvedRequestPreview }
   | { type: 'sampleTestResult'; testRun: TestRunResult }
   | { type: 'previewResult'; preview: ResolvedRequestPreview }
+  | { type: 'epicPicked'; epicPath: string }
+  | { type: 'featurePicked'; featurePath: string; featureName: string; stories: string[] }
   | { type: 'error'; message: string };
 
 export type RequestWebviewToHostMessage =
@@ -375,7 +406,9 @@ export type RequestWebviewToHostMessage =
   | { type: 'runAgainstSample' }
   | { type: 'requestPreview' }
   | { type: 'saveMarkdown'; markdown: string; suggestedName: string }
-  | { type: 'diagnostics'; fileUri: string; diagnostics: DiagnosticItem[] };
+  | { type: 'diagnostics'; fileUri: string; diagnostics: DiagnosticItem[] }
+  | { type: 'pickEpic' }
+  | { type: 'pickFeature'; epicPath: string };
 
 // --- Webview <-> extension host message protocol: env config editor ---
 

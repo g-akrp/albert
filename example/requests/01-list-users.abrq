@@ -1,6 +1,6 @@
 {
-  "akrpType": "request",
-  "akrpVersion": 1,
+  "albertType": "request",
+  "albertVersion": 1,
   "name": "List users",
   "request": {
     "method": "GET",
@@ -26,5 +26,16 @@
     { "id": "e_first", "target": "body", "path": "users[0].name", "operator": "exists", "expected": "" }
   ],
   "schemaValidation": { "enabled": false, "schema": "" },
-  "sampleResponse": "{\n  \"users\": [{ \"id\": 1, \"name\": \"Ada Lovelace\" }],\n  \"total\": 1\n}"
+  "sampleResponse": "{\n  \"users\": [{ \"id\": 1, \"name\": \"Ada Lovelace\" }],\n  \"total\": 1\n}",
+  "allureReportConfig": {
+    "description": "Lists all users from the user repository",
+    "severity": "normal",
+    "feature": "User Retrieval",
+    "story": "List Users Story",
+    "suite": "User Management Tests",
+    "owner": "Akarapon",
+    "tags": ["smoke", "read"],
+    "epicPath": "../user-management.abepic",
+    "featurePath": "../user-retrieval.abfeat"
+  }
 }

@@ -8,7 +8,7 @@ export function renderHistoryTab(container: HTMLElement): void {
 
   if (store.history.length === 0) {
     const empty = document.createElement('div');
-    empty.className = 'akrp-empty';
+    empty.className = 'albert-empty';
     empty.textContent = 'No requests sent yet this session.';
     container.appendChild(empty);
     return;
@@ -28,10 +28,10 @@ export function renderHistoryTab(container: HTMLElement): void {
 
 function buildHistoryEntry(entry: HistoryEntry): HTMLElement {
   const wrapper = document.createElement('div');
-  wrapper.className = 'akrp-result-block';
+  wrapper.className = 'albert-result-block';
 
   const headerRow = document.createElement('div');
-  headerRow.className = 'akrp-tree-item';
+  headerRow.className = 'albert-tree-item';
   headerRow.style.cursor = 'pointer';
   const ok = !entry.result.error && entry.result.status >= 200 && entry.result.status < 400;
   const badge = document.createElement('span');
@@ -49,7 +49,7 @@ function buildHistoryEntry(entry: HistoryEntry): HTMLElement {
     details.style.marginTop = '8px';
 
     const requestTitle = document.createElement('div');
-    requestTitle.className = 'akrp-section-title';
+    requestTitle.className = 'albert-section-title';
     requestTitle.textContent = 'Request';
     details.appendChild(requestTitle);
     const requestBlocks = document.createElement('div');
@@ -57,7 +57,7 @@ function buildHistoryEntry(entry: HistoryEntry): HTMLElement {
     details.appendChild(requestBlocks);
 
     const responseTitle = document.createElement('div');
-    responseTitle.className = 'akrp-section-title';
+    responseTitle.className = 'albert-section-title';
     responseTitle.textContent = 'Response body';
     details.appendChild(responseTitle);
     const responsePre = document.createElement('pre');
@@ -65,7 +65,7 @@ function buildHistoryEntry(entry: HistoryEntry): HTMLElement {
     details.appendChild(responsePre);
 
     const testsTitle = document.createElement('div');
-    testsTitle.className = 'akrp-section-title';
+    testsTitle.className = 'albert-section-title';
     testsTitle.textContent = 'Tests';
     details.appendChild(testsTitle);
     const testsEl = document.createElement('div');

@@ -151,15 +151,15 @@ function injectStyles(): void {
     .status { font-weight: 600; margin-bottom: 8px; }
     .chk.ok { color: #2cbb4b; } .chk.err { color: #d9534f; }
     pre { background: #111; padding: 8px; overflow:auto; white-space: pre-wrap; word-break: break-word; }
-    .akrp-chart { margin: 10px 0; max-width: 620px; }
-    .akrp-chart-title { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
-    .akrp-chart-svg { width: 100%; height: auto; background: #111; border: 1px solid #333; }
-    .akrp-chart-grid { stroke: #333; stroke-width: 0.5; }
-    .akrp-chart-axis { fill: #9aa; font-size: 9px; }
-    .akrp-chart-legend { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 4px; font-size: 11px; }
-    .akrp-legend-item { display: flex; align-items: center; gap: 4px; }
-    .akrp-legend-swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
-    .akrp-sankey-label { fill: #ddd; font-size: 10px; }
+    .albert-chart { margin: 10px 0; max-width: 620px; }
+    .albert-chart-title { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+    .albert-chart-svg { width: 100%; height: auto; background: #111; border: 1px solid #333; }
+    .albert-chart-grid { stroke: #333; stroke-width: 0.5; }
+    .albert-chart-axis { fill: #9aa; font-size: 9px; }
+    .albert-chart-legend { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 4px; font-size: 11px; }
+    .albert-legend-item { display: flex; align-items: center; gap: 4px; }
+    .albert-legend-swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+    .albert-sankey-label { fill: #ddd; font-size: 10px; }
     table.summary { border-collapse: collapse; margin: 12px 0; font-size: 12px; }
     table.summary th, table.summary td { border: 1px solid #333; padding: 4px 8px; text-align: left; }
   ` + flowResultStyles();

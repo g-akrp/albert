@@ -35,7 +35,7 @@ export async function runFlowOnce(
   const result = (async () => {
     try {
       return await new Promise<FlowRunResult>((resolve) => {
-        const c = spawn(k6Path, ['run', '--no-usage-report', '--vus', '1', '--iterations', '1', ...extraArgs, scriptPath], {
+        const c = spawn(k6Path, ['run', '--log-format', 'raw', '--no-usage-report', '--vus', '1', '--iterations', '1', ...extraArgs, scriptPath], {
           stdio: ['ignore', 'pipe', 'pipe'],
         });
         child = c;

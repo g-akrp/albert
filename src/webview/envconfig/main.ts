@@ -8,16 +8,16 @@ injectStyles();
 
 const root = document.getElementById('root')!;
 root.innerHTML = `
-  <div class="akrp-main">
-    <div id="akrp-name"></div>
-    <div id="akrp-variables"></div>
-    <div id="akrp-settings"></div>
+  <div class="albert-main">
+    <div id="albert-name"></div>
+    <div id="albert-variables"></div>
+    <div id="albert-settings"></div>
   </div>
 `;
 
-const nameEl = document.getElementById('akrp-name') as HTMLElement;
-const variablesEl = document.getElementById('akrp-variables') as HTMLElement;
-const settingsEl = document.getElementById('akrp-settings') as HTMLElement;
+const nameEl = document.getElementById('albert-name') as HTMLElement;
+const variablesEl = document.getElementById('albert-variables') as HTMLElement;
+const settingsEl = document.getElementById('albert-settings') as HTMLElement;
 
 function render(): void {
   renderName(nameEl);
@@ -44,7 +44,7 @@ function renderName(container: HTMLElement): void {
 function renderVariables(container: HTMLElement): void {
   container.innerHTML = '';
   const title = document.createElement('div');
-  title.className = 'akrp-section-title';
+  title.className = 'albert-section-title';
   title.textContent = 'Variables';
   container.appendChild(title);
 
@@ -61,12 +61,12 @@ function renderVariables(container: HTMLElement): void {
 function renderSettings(container: HTMLElement): void {
   container.innerHTML = '';
   const title = document.createElement('div');
-  title.className = 'akrp-section-title';
+  title.className = 'albert-section-title';
   title.textContent = 'Settings';
   container.appendChild(title);
 
   const timeoutRow = document.createElement('div');
-  timeoutRow.className = 'akrp-row';
+  timeoutRow.className = 'albert-row';
   const timeoutLabel = document.createElement('label');
   timeoutLabel.textContent = 'Timeout (ms)';
   const timeoutInput = document.createElement('input');
@@ -82,7 +82,7 @@ function renderSettings(container: HTMLElement): void {
   container.appendChild(timeoutRow);
 
   const redirectsRow = document.createElement('div');
-  redirectsRow.className = 'akrp-checkbox-row';
+  redirectsRow.className = 'albert-checkbox-row';
   const redirectsCheckbox = document.createElement('input');
   redirectsCheckbox.type = 'checkbox';
   redirectsCheckbox.checked = store.file.settings.followRedirects !== false;

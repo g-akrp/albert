@@ -15,11 +15,11 @@ export function attachVariableSuggestions(input: HTMLInputElement, getVarNames: 
   function open(matches: string[], braceStart: number): void {
     close();
     dropdown = document.createElement('div');
-    dropdown.className = 'akrp-var-suggest';
+    dropdown.className = 'albert-var-suggest';
 
     for (const name of matches) {
       const item = document.createElement('div');
-      item.className = 'akrp-var-suggest-item';
+      item.className = 'albert-var-suggest-item';
       item.textContent = name;
       // mousedown (not click) fires before the input's blur handler would close the dropdown.
       item.onmousedown = (e) => {

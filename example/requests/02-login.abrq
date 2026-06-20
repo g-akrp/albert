@@ -1,6 +1,6 @@
 {
-  "akrpType": "request",
-  "akrpVersion": 1,
+  "albertType": "request",
+  "albertVersion": 1,
   "name": "Login",
   "request": {
     "method": "POST",
@@ -39,5 +39,16 @@
     "enabled": true,
     "schema": "{\n  \"type\": \"object\",\n  \"required\": [\"token\"],\n  \"properties\": {\n    \"token\": { \"type\": \"string\" },\n    \"expiresIn\": { \"type\": \"number\" }\n  }\n}"
   },
-  "sampleResponse": "{\n  \"token\": \"mock-jwt-abc123\",\n  \"expiresIn\": 3600,\n  \"user\": {\n    \"id\": 1,\n    \"name\": \"Ada Lovelace\",\n    \"s\":\"{{apiKey}}\"\n  }\n}"
+  "sampleResponse": "{\n  \"token\": \"mock-jwt-abc123\",\n  \"expiresIn\": 3600,\n  \"user\": {\n    \"id\": 1,\n    \"name\": \"Ada Lovelace\",\n    \"s\":\"{{apiKey}}\"\n  }\n}",
+  "allureReportConfig": {
+    "description": "Authenticates a user and returns a token",
+    "severity": "critical",
+    "feature": "User Authentication",
+    "story": "Login Story",
+    "suite": "Authentication Tests",
+    "owner": "Akarapon",
+    "tags": ["auth", "smoke"],
+    "epicPath": "../user-management.abepic",
+    "featurePath": "../user-auth.abfeat"
+  }
 }

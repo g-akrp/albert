@@ -1,4 +1,5 @@
 import {
+  AllureReportConfig,
   AuthConfig,
   BodyMode,
   DEFAULT_CONTENT_TYPE_BY_BODY_MODE,
@@ -17,6 +18,7 @@ export interface ResolvedFlowStep {
   request: RequestDetails;
   expectations: ExpectAssertion[];
   schemaValidation: SchemaValidationConfig;
+  allureReportConfig?: AllureReportConfig;
 }
 
 interface ResolvedHttp {
@@ -65,17 +67,40 @@ function generateStepBlock(rs: ResolvedFlowStep, variables: KeyValueEntry[], emi
 
   const emitBlock = emitSteps
     ? `
-    emitStep({
-      stepId: ${JSON.stringify(rs.step.id)},
-      name: ${JSON.stringify(rs.step.name)},
-      method: ${JSON.stringify(resolved.method)},
-      url: url,
-      status: res ? res.status : 0,
-      durationMs: res ? res.timings.duration : 0,
-      checks: checkResults,
-      bodyPreview: res && res.body ? String(res.body).slice(0, 2000) : '',
-      error: err,
-    });`
+    const stepCaptures = {};
+    if (res) {
+      const __captures = ${JSON.stringify(captures)};
+      for (const cap of __captures) {
+        stepCaptures[cap.variable] = vars[cap.variable] !== undefined ? vars[cap.variable] : '';
+      }
+    }
+    const resHeaders = {};
+    if (res && res.headers) {
+      for (const k in res.headers) {
+        resHeaders[k] = res.headers[k];
+      }
+    }
+    try {
+      emitStep({
+        stepId: ${JSON.stringify(rs.step.id)},
+        name: ${JSON.stringify(rs.step.name)},
+        method: ${JSON.stringify(resolved.method)},
+        url: url,
+        status: res ? res.status : 0,
+        durationMs: res && res.timings ? res.timings.duration : 0,
+        checks: checkResults,
+        bodyPreview: res && res.body ? String(res.body).slice(0, 2000) : '',
+        error: err || (res && res.error ? res.error : undefined),
+        capturedValues: stepCaptures,
+        allureReportConfig: ${JSON.stringify(rs.allureReportConfig || null)},
+        requestHeaders: headers,
+        requestBody: body !== null ? String(body) : '',
+        responseHeaders: resHeaders,
+      });
+    } catch (e) {
+      console.log('Failed to emit step results: ' + String(e));
+    }
+    `
     : '';
 
   return `  {

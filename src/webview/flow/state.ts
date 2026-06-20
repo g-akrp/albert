@@ -23,9 +23,11 @@ class FlowStore {
   lastRun: FlowRunResult | null = null;
   history: FlowRunHistoryEntry[] = [];
   expandedHistoryIds = new Set<string>();
+  selectedStepId: string | null = null;
 
   private listeners: Listener[] = [];
   private editTimer: ReturnType<typeof setTimeout> | null = null;
+  private editInFlight = false;
 
   subscribe(fn: Listener): void {
     this.listeners.push(fn);
@@ -36,7 +38,24 @@ class FlowStore {
   }
 
   setFile(file: FlowFile): void {
+    if (this.editTimer) return;
+    if (this.editInFlight) {
+      this.editInFlight = false;
+      if (JSON.stringify(file) === JSON.stringify(this.file)) return;
+    }
     this.file = file;
+    if (file.steps.length > 0) {
+      if (!this.selectedStepId || !file.steps.some((s) => s.id === this.selectedStepId)) {
+        this.selectedStepId = file.steps[0].id;
+      }
+    } else {
+      this.selectedStepId = null;
+    }
+    this.notify();
+  }
+
+  setSelectedStepId(id: string | null): void {
+    this.selectedStepId = id;
     this.notify();
   }
 
@@ -59,6 +78,8 @@ class FlowStore {
   private scheduleEdit(): void {
     if (this.editTimer) clearTimeout(this.editTimer);
     this.editTimer = setTimeout(() => {
+      this.editTimer = null;
+      this.editInFlight = true;
       vscodeApi.postMessage({ type: 'edit', file: this.file });
     }, 200);
   }

@@ -15,7 +15,7 @@ export function lintSchema(monaco: typeof monacoNs, model: monacoNs.editor.IText
   });
 
   if (!text.trim()) {
-    monaco.editor.setModelMarkers(model, 'akrp-schema-lint', []);
+    monaco.editor.setModelMarkers(model, 'albert-schema-lint', []);
     return;
   }
 
@@ -23,15 +23,15 @@ export function lintSchema(monaco: typeof monacoNs, model: monacoNs.editor.IText
   try {
     schema = JSON.parse(text);
   } catch (err: any) {
-    monaco.editor.setModelMarkers(model, 'akrp-schema-lint', [fullDocMarker(`Invalid JSON: ${err?.message ?? err}`)]);
+    monaco.editor.setModelMarkers(model, 'albert-schema-lint', [fullDocMarker(`Invalid JSON: ${err?.message ?? err}`)]);
     return;
   }
 
   try {
     new Ajv({ strict: false }).compile(schema as any);
-    monaco.editor.setModelMarkers(model, 'akrp-schema-lint', []);
+    monaco.editor.setModelMarkers(model, 'albert-schema-lint', []);
   } catch (err: any) {
-    monaco.editor.setModelMarkers(model, 'akrp-schema-lint', [
+    monaco.editor.setModelMarkers(model, 'albert-schema-lint', [
       fullDocMarker(`Schema compile error: ${err?.message ?? err}`),
     ]);
   }

@@ -2,11 +2,11 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Albert Simulation",
   "type": "object",
-  "required": ["akrpType", "akrpVersion", "name", "profile", "flows"],
+  "required": ["albertType", "albertVersion", "name", "profile", "flows"],
   "additionalProperties": false,
   "properties": {
-    "akrpType": { "const": "sim" },
-    "akrpVersion": { "const": 1 },
+    "albertType": { "const": "sim" },
+    "albertVersion": { "const": 1 },
     "name": { "type": "string" },
     "profile": {
       "type": "object",

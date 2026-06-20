@@ -2,11 +2,11 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Albert Request",
   "type": "object",
-  "required": ["akrpType", "akrpVersion", "name", "request", "scripts", "expectations", "schemaValidation", "sampleResponse"],
+  "required": ["albertType", "albertVersion", "name", "request", "scripts", "expectations", "schemaValidation", "sampleResponse", "allureReportConfig"],
   "additionalProperties": false,
   "properties": {
-    "akrpType": { "const": "request" },
-    "akrpVersion": { "const": 1 },
+    "albertType": { "const": "request" },
+    "albertVersion": { "const": 1 },
     "name": { "type": "string" },
     "request": { "$ref": "#/definitions/requestDetails" },
     "scripts": {
@@ -31,7 +31,26 @@
         "schema": { "type": "string" }
       }
     },
-    "sampleResponse": { "type": "string" }
+    "sampleResponse": { "type": "string" },
+    "allureReportConfig": {
+      "type": "object",
+      "required": ["description", "severity", "feature", "story", "suite", "owner", "tags"],
+      "additionalProperties": false,
+      "properties": {
+        "description": { "type": "string" },
+        "severity": { "enum": ["blocker", "critical", "normal", "minor", "trivial"] },
+        "feature": { "type": "string" },
+        "story": { "type": "string" },
+        "suite": { "type": "string" },
+        "owner": { "type": "string" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "epicPath": { "type": "string" },
+        "featurePath": { "type": "string" }
+      }
+    }
   },
   "definitions": {
     "keyValueEntry": {

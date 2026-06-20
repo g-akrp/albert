@@ -2,7 +2,7 @@ import { AssertionResult, TestRunResult } from '../../model/types';
 
 export function renderTestResults(container: HTMLElement, testRun: TestRunResult): void {
   container.innerHTML = '';
-  container.className = 'akrp-test-results';
+  container.className = 'albert-test-results';
 
   renderBlock(container, 'Expect', testRun.expectResults);
   renderSchemaBlock(container, testRun.schemaValidation);
@@ -13,10 +13,10 @@ function renderBlock(container: HTMLElement, title: string, assertions: Assertio
   if (assertions.length === 0) return;
 
   const block = document.createElement('div');
-  block.className = 'akrp-result-block';
+  block.className = 'albert-result-block';
 
   const heading = document.createElement('div');
-  heading.className = 'akrp-section-title';
+  heading.className = 'albert-section-title';
   heading.textContent = `${title} (${assertions.filter((a) => a.pass).length}/${assertions.length} passed)`;
   block.appendChild(heading);
 
@@ -31,10 +31,10 @@ function renderSchemaBlock(container: HTMLElement, schemaValidation: TestRunResu
   if (!schemaValidation) return;
 
   const block = document.createElement('div');
-  block.className = 'akrp-result-block';
+  block.className = 'albert-result-block';
 
   const heading = document.createElement('div');
-  heading.className = 'akrp-section-title';
+  heading.className = 'albert-section-title';
   heading.textContent = 'Schema (AJV)';
   block.appendChild(heading);
 
@@ -58,10 +58,10 @@ function renderScriptsBlock(
   if (scriptResults.length === 0 && consoleLogs.length === 0 && !scriptError) return;
 
   const block = document.createElement('div');
-  block.className = 'akrp-result-block';
+  block.className = 'albert-result-block';
 
   const heading = document.createElement('div');
-  heading.className = 'akrp-section-title';
+  heading.className = 'albert-section-title';
   const passed = scriptResults.filter((a) => a.pass).length;
   heading.textContent = scriptResults.length > 0 ? `Scripts (${passed}/${scriptResults.length} passed)` : 'Scripts';
   block.appendChild(heading);
@@ -76,7 +76,7 @@ function renderScriptsBlock(
 
   for (const log of consoleLogs) {
     const line = document.createElement('div');
-    line.className = 'akrp-log-line';
+    line.className = 'albert-log-line';
     line.textContent = log;
     block.appendChild(line);
   }
@@ -86,7 +86,7 @@ function renderScriptsBlock(
 
 function renderAssertionRow(pass: boolean, text: string): HTMLElement {
   const row = document.createElement('div');
-  row.className = 'akrp-assertion';
+  row.className = 'albert-assertion';
   const icon = document.createElement('span');
   icon.className = 'icon ' + (pass ? 'pass' : 'fail');
   icon.textContent = pass ? '✓' : '✗';

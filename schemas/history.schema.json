@@ -2,11 +2,11 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Albert Flow Run History",
   "type": "object",
-  "required": ["akrpType", "akrpVersion", "name", "kind", "flowRuns"],
+  "required": ["albertType", "albertVersion", "name", "kind", "flowRuns"],
   "additionalProperties": false,
   "properties": {
-    "akrpType": { "const": "history" },
-    "akrpVersion": { "const": 1 },
+    "albertType": { "const": "history" },
+    "albertVersion": { "const": 1 },
     "name": { "type": "string" },
     "kind": { "const": "flow" },
     "flowRuns": {

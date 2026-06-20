@@ -1,6 +1,6 @@
 {
-  "akrpType": "flow",
-  "akrpVersion": 1,
+  "albertType": "flow",
+  "albertVersion": 1,
   "name": "Browse users",
   "steps": [
     {

@@ -17,7 +17,8 @@ example/
 │   └── browse.abf           single-step list-users flow
 ├── sims/
 │   └── smoke.abl            Load sim: user-journey @ 5 TPS + browse @ 20 TPS, "load" profile, 30s
-└── wiremock/               The mock API (compose + request/response mappings)
+├── wiremock/               The mock API (compose + request/response mappings)
+└── allure/                 Allure Report Server container configuration
 ```
 
 ## 1. Start the mock API (WireMock)
@@ -40,7 +41,7 @@ It serves `http://localhost:8080` with these endpoints:
 
 ## 2. Run it in VS Code
 
-1. Command Palette → **AKRP/Albert: Select Active Environment** → pick `example/Local.abenv`.
+1. Command Palette → **albert/Albert: Select Active Environment** → pick `example/Local.abenv`.
 2. Open any `requests/*.abrq` and click **Send** — try the **Preview**, **Expect**, **Schema**,
    **Scripts** (with **Run against sample**), and **Response** tabs.
 3. Open `flows/user-journey.abf` → **▶ Run flow**. Watch the login step capture `token`/`userId` and
@@ -67,3 +68,23 @@ node out/cli.js stack up                                                  # Infl
 node out/cli.js run example/sims/smoke.abl --env example/Local.abenv --influx http://localhost:8086/k6
 # open http://localhost:3000
 ```
+
+### Optional: View reports in Allure Server
+
+1. Start the Allure Report Server. Needs podman or docker:
+   ```bash
+   podman compose -f example/allure/compose.yml up      # or: docker compose -f example/allure/compose.yml up
+   ```
+   It will host the Allure Docker Service at `http://localhost:5050`.
+
+2. Open VS Code Settings (`Ctrl+,`) and configure:
+   - **`albert.allure.enabled`**: Set to `true`.
+   - **`albert.allure.serverUrl`**: `"http://localhost:5050"`.
+   - **`albert.allure.projectId`**: `"default"` (or a custom project ID).
+
+3. Open `flows/user-journey.abf` and click **▶ Run flow**. Once the run completes, Albert will upload the results to Allure in the background.
+
+4. Open the Allure Report Server dashboard at:
+   `http://localhost:5050/allure-docker-service/projects/default/reports/latest/index.html`
+   to view step-by-step executions, validations, parameters, and response body attachments.
+

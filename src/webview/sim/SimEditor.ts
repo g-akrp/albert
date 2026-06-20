@@ -27,12 +27,12 @@ function renderHeader(): HTMLElement {
   header.appendChild(nameInput);
 
   const env = document.createElement('div');
-  env.className = 'akrp-env-readout';
+  env.className = 'albert-env-readout';
   env.textContent = `Env: ${store.activeEnvName ?? 'none'}`;
   header.appendChild(env);
 
   const bar = document.createElement('div');
-  bar.className = 'akrp-flow-toolbar';
+  bar.className = 'albert-flow-toolbar';
 
   if (store.running) {
     const stopBtn = document.createElement('button');
@@ -61,7 +61,7 @@ function renderHeader(): HTMLElement {
 
 function renderProfile(): HTMLElement {
   const wrap = document.createElement('div');
-  wrap.className = 'akrp-sim-profile';
+  wrap.className = 'albert-sim-profile';
 
   const profileSel = document.createElement('select');
   for (const p of PROFILES) {
@@ -86,16 +86,16 @@ function renderProfile(): HTMLElement {
 
 function renderFlows(): HTMLElement {
   const wrap = document.createElement('div');
-  wrap.className = 'akrp-sim-flows';
+  wrap.className = 'albert-sim-flows';
 
   const title = document.createElement('div');
-  title.className = 'akrp-section-title';
+  title.className = 'albert-section-title';
   title.textContent = 'Flows & target TPS';
   wrap.appendChild(title);
 
   if (store.file.flows.length === 0) {
     const empty = document.createElement('div');
-    empty.className = 'akrp-empty';
+    empty.className = 'albert-empty';
     empty.textContent = 'No flows yet. Click "Add flow" and pick a .abf for each, with a target TPS.';
     wrap.appendChild(empty);
     return wrap;
@@ -107,7 +107,7 @@ function renderFlows(): HTMLElement {
 
 function renderFlowRow(entry: SimFlowEntry, index: number): HTMLElement {
   const row = document.createElement('div');
-  row.className = 'akrp-sim-flow-row';
+  row.className = 'albert-sim-flow-row';
 
   const enabled = document.createElement('input');
   enabled.type = 'checkbox';
@@ -116,7 +116,7 @@ function renderFlowRow(entry: SimFlowEntry, index: number): HTMLElement {
   enabled.onchange = () => store.mutate(() => (entry.enabled = enabled.checked));
 
   const flowPath = document.createElement('span');
-  flowPath.className = 'akrp-flow-req-path' + (entry.flowPath ? '' : ' missing');
+  flowPath.className = 'albert-flow-req-path' + (entry.flowPath ? '' : ' missing');
   flowPath.textContent = entry.flowPath || '(no flow selected)';
   flowPath.style.flex = '1';
 
@@ -134,11 +134,11 @@ function renderFlowRow(entry: SimFlowEntry, index: number): HTMLElement {
   tps.oninput = () => store.mutateQuiet(() => (entry.targetTps = Math.max(1, Number(tps.value) || 1)));
 
   const tpsLabel = document.createElement('span');
-  tpsLabel.className = 'akrp-sim-tps-label';
+  tpsLabel.className = 'albert-sim-tps-label';
   tpsLabel.textContent = 'TPS';
 
   const del = document.createElement('button');
-  del.className = 'secondary akrp-icon-btn';
+  del.className = 'secondary albert-icon-btn';
   del.textContent = '✕';
   del.onclick = () => store.mutate(() => store.file.flows.splice(index, 1));
 
@@ -148,15 +148,15 @@ function renderFlowRow(entry: SimFlowEntry, index: number): HTMLElement {
 
 function renderApm(): HTMLElement {
   const wrap = document.createElement('div');
-  wrap.className = 'akrp-sim-apm';
+  wrap.className = 'albert-sim-apm';
 
   const title = document.createElement('div');
-  title.className = 'akrp-section-title';
+  title.className = 'albert-section-title';
   title.textContent = 'APM export';
   wrap.appendChild(title);
 
   const toggleRow = document.createElement('label');
-  toggleRow.className = 'akrp-flow-validate';
+  toggleRow.className = 'albert-flow-validate';
   const toggle = document.createElement('input');
   toggle.type = 'checkbox';
   toggle.checked = !!store.file.apm;
@@ -169,7 +169,7 @@ function renderApm(): HTMLElement {
 
   if (store.file.apm) {
     const cfg = document.createElement('div');
-    cfg.className = 'akrp-row';
+    cfg.className = 'albert-row';
 
     const regionSel = document.createElement('select');
     for (const r of ['US', 'EU'] as const) {
@@ -187,7 +187,7 @@ function renderApm(): HTMLElement {
     keyBtn.onclick = () => store.setApmKey();
 
     const status = document.createElement('span');
-    status.className = 'akrp-sim-apm-status ' + (store.hasApmKey ? 'ok' : 'missing');
+    status.className = 'albert-sim-apm-status ' + (store.hasApmKey ? 'ok' : 'missing');
     status.textContent = store.hasApmKey ? 'API key set' : 'No API key set';
 
     cfg.append(labeled('Region', regionSel), keyBtn, status);
@@ -214,10 +214,10 @@ function renderVisualization(): HTMLElement {
 
 function renderPreviewPanel(enabledFlows: SimFlowEntry[]): HTMLElement {
   const wrap = document.createElement('div');
-  wrap.className = 'akrp-flow-results';
+  wrap.className = 'albert-flow-results';
 
   const heading = document.createElement('div');
-  heading.className = 'akrp-section-title';
+  heading.className = 'albert-section-title';
   heading.textContent = 'Planned load (preview)';
   wrap.appendChild(heading);
 
@@ -230,16 +230,16 @@ function renderPreviewPanel(enabledFlows: SimFlowEntry[]): HTMLElement {
 
 function renderResultsPanel(): HTMLElement {
   const wrap = document.createElement('div');
-  wrap.className = 'akrp-flow-results';
+  wrap.className = 'albert-flow-results';
 
   const heading = document.createElement('div');
-  heading.className = 'akrp-section-title';
+  heading.className = 'albert-section-title';
   heading.textContent = store.running ? 'Live results (running…)' : 'Results';
   wrap.appendChild(heading);
 
   if (store.error) {
     const err = document.createElement('div');
-    err.className = 'akrp-response-status err';
+    err.className = 'albert-response-status err';
     err.textContent = store.error;
     wrap.appendChild(err);
   }
@@ -250,7 +250,7 @@ function renderResultsPanel(): HTMLElement {
 
   if (store.summary?.apmExport) {
     const apm = document.createElement('div');
-    apm.className = 'akrp-response-status ' + (store.summary.apmExport.ok ? 'ok' : 'err');
+    apm.className = 'albert-response-status ' + (store.summary.apmExport.ok ? 'ok' : 'err');
     apm.textContent = `APM (${store.summary.apmExport.provider}): ${store.summary.apmExport.message}`;
     wrap.appendChild(apm);
   }
@@ -263,7 +263,7 @@ function renderResultsPanel(): HTMLElement {
 function flowEntryLabel(entry: SimFlowEntry, index: number): string {
   if (!entry.flowPath) return `Flow ${index + 1}`;
   const base = entry.flowPath.split('/').pop() ?? entry.flowPath;
-  return base.replace(/\.akrp\.flow$/, '');
+  return base.replace(/\.albert\.flow$/, '');
 }
 
 function renderPlannedXY(enabledFlows: SimFlowEntry[]): HTMLElement {
@@ -279,7 +279,7 @@ function renderPlannedXY(enabledFlows: SimFlowEntry[]): HTMLElement {
   wrap.appendChild(lineChart('Planned throughput over time (req/s)', series, { yFormat: (n) => `${Math.round(n)}` }));
 
   const note = document.createElement('div');
-  note.className = 'akrp-env-readout';
+  note.className = 'albert-env-readout';
   note.textContent = `Profile: ${store.file.profile.type} · ~${maxDuration}s · combined target ${enabledFlows.reduce((s, f) => s + f.targetTps, 0)} req/s`;
   wrap.appendChild(note);
   return wrap;
@@ -292,7 +292,7 @@ function renderPlannedSankey(enabledFlows: SimFlowEntry[]): HTMLElement {
 
   if (total === 0) {
     const empty = document.createElement('div');
-    empty.className = 'akrp-empty';
+    empty.className = 'albert-empty';
     empty.textContent = 'Set a target TPS and duration to preview the planned load distribution.';
     wrap.appendChild(empty);
     return wrap;
@@ -314,7 +314,7 @@ function renderPlannedSankey(enabledFlows: SimFlowEntry[]): HTMLElement {
 function renderPlannedTable(enabledFlows: SimFlowEntry[]): HTMLElement {
   const wrap = document.createElement('div');
   const table = document.createElement('table');
-  table.className = 'akrp-sim-summary';
+  table.className = 'albert-sim-summary';
   table.innerHTML = `<thead><tr>
     <th>Flow</th><th>Target TPS</th><th>Profile</th><th>Duration</th><th>Planned requests</th>
   </tr></thead>`;
@@ -342,7 +342,7 @@ function renderPlannedTable(enabledFlows: SimFlowEntry[]): HTMLElement {
 
 function renderViewSwitcher(): HTMLElement {
   const bar = document.createElement('div');
-  bar.className = 'akrp-sim-view-switcher';
+  bar.className = 'albert-sim-view-switcher';
   const views: { id: 'xy' | 'sankey' | 'table'; label: string }[] = [
     { id: 'xy', label: 'XY chart' },
     { id: 'sankey', label: 'Sankey' },
@@ -420,7 +420,7 @@ function renderXYView(): HTMLElement {
   const scenarios = effectiveScenarios();
   if (scenarios.length) {
     const charts = document.createElement('div');
-    charts.className = 'akrp-sim-summary-charts';
+    charts.className = 'albert-sim-summary-charts';
     charts.appendChild(
       barChart(
         'Achieved TPS by flow',
@@ -447,14 +447,14 @@ function renderTableView(): HTMLElement {
 
   if (scenarios.length === 0) {
     const empty = document.createElement('div');
-    empty.className = 'akrp-empty';
+    empty.className = 'albert-empty';
     empty.textContent = 'No data yet.';
     wrap.appendChild(empty);
     return wrap;
   }
 
   const table = document.createElement('table');
-  table.className = 'akrp-sim-summary';
+  table.className = 'albert-sim-summary';
   table.innerHTML = `<thead><tr>
     <th>Flow</th><th>Target TPS</th><th>Achieved</th><th>Requests</th>
     <th>Errors</th><th>p50</th><th>p95</th><th>p99</th><th>Checks</th>
@@ -474,7 +474,7 @@ function renderSankeyView(): HTMLElement {
 
   if (totalReqs === 0) {
     const empty = document.createElement('div');
-    empty.className = 'akrp-empty';
+    empty.className = 'albert-empty';
     empty.textContent = 'No requests recorded yet — the Sankey appears once load is flowing.';
     wrap.appendChild(empty);
     return wrap;
@@ -550,7 +550,7 @@ function numberField(label: string, value: number, onChange: (v: number) => void
 
 function labeled(label: string, control: HTMLElement): HTMLElement {
   const wrap = document.createElement('label');
-  wrap.className = 'akrp-sim-field';
+  wrap.className = 'albert-sim-field';
   const span = document.createElement('span');
   span.textContent = label;
   wrap.append(span, control);

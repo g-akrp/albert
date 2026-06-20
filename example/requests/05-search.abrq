@@ -1,6 +1,6 @@
 {
-  "akrpType": "request",
-  "akrpVersion": 1,
+  "albertType": "request",
+  "albertVersion": 1,
   "name": "Search (API key auth)",
   "request": {
     "method": "GET",
@@ -19,5 +19,16 @@
     { "id": "e_results", "target": "body", "path": "results", "operator": "exists", "expected": "" }
   ],
   "schemaValidation": { "enabled": false, "schema": "" },
-  "sampleResponse": "{\n  \"results\": [\"Ada Lovelace\"],\n  \"query\": \"ada\"\n}"
+  "sampleResponse": "{\n  \"results\": [\"Ada Lovelace\"],\n  \"query\": \"ada\"\n}",
+  "allureReportConfig": {
+    "description": "Searches for users by query using API key authentication",
+    "severity": "normal",
+    "feature": "User Retrieval",
+    "story": "Search Users Story",
+    "suite": "User Management Tests",
+    "owner": "Akarapon",
+    "tags": ["read", "search"],
+    "epicPath": "../user-management.abepic",
+    "featurePath": "../user-retrieval.abfeat"
+  }
 }

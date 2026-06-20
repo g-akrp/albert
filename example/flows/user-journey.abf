@@ -1,6 +1,6 @@
 {
-  "akrpType": "flow",
-  "akrpVersion": 1,
+  "albertType": "flow",
+  "albertVersion": 1,
   "name": "User journey",
   "steps": [
     {
@@ -10,8 +10,16 @@
       "enabled": true,
       "validate": true,
       "captures": [
-        { "variable": "token", "source": "body", "path": "token" },
-        { "variable": "userId", "source": "body", "path": "user.id" }
+        {
+          "variable": "token",
+          "source": "body",
+          "path": "token"
+        },
+        {
+          "variable": "userId",
+          "source": "body",
+          "path": "user.id"
+        }
       ]
     },
     {

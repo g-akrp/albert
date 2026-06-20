@@ -31,9 +31,9 @@ export function lintScript(
       }
     }
 
-    monaco.editor.setModelMarkers(model, 'akrp-syntax-lint', markers);
+    monaco.editor.setModelMarkers(model, 'albert-syntax-lint', markers);
   } catch (e) {
-    console.error('[akrp] lintScript error:', e);
+    console.error('[albert] lintScript error:', e);
   }
 }
 
@@ -65,8 +65,8 @@ export function lintScriptVariables(
       });
     }
 
-    monaco.editor.setModelMarkers(model, 'akrp-var-lint', markers);
+    monaco.editor.setModelMarkers(model, 'albert-var-lint', markers);
   } catch (e) {
-    console.error('[akrp] lintScriptVariables error:', e);
+    console.error('[albert] lintScriptVariables error:', e);
   }
 }

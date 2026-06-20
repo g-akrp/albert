@@ -42,12 +42,15 @@ export class RequestEditorProvider implements vscode.CustomTextEditorProvider {
 
     const docKey = document.uri.toString();
 
-    const changeSub = vscode.workspace.onDidChangeTextDocument((e) => {
+    const changeSub = vscode.workspace.onDidChangeTextDocument(async (e) => {
       if (e.document.uri.toString() !== docKey) return;
       const currentText = e.document.getText();
       if (this.selfAppliedText.get(docKey) === currentText) return;
       const parsed = tryParseRequestFile(currentText);
-      if (parsed) postToWebview({ type: 'documentChanged', file: parsed });
+      if (parsed) {
+        const allureStories = await resolveAllureStories(document.uri.fsPath, parsed.allureReportConfig.featurePath);
+        postToWebview({ type: 'documentChanged', file: parsed, allureStories });
+      }
       else postToWebview({ type: 'error', message: 'Document contains invalid Albert request JSON.' });
     });
 
@@ -77,6 +80,7 @@ export class RequestEditorProvider implements vscode.CustomTextEditorProvider {
           const parsed = tryParseRequestFile(document.getText());
           if (parsed) {
             const { variables } = await this.activeEnvironment.getActiveVariablesAndSettings();
+            const allureStories = await resolveAllureStories(document.uri.fsPath, parsed.allureReportConfig.featurePath);
             postToWebview({
               type: 'init',
               file: parsed,
@@ -84,6 +88,7 @@ export class RequestEditorProvider implements vscode.CustomTextEditorProvider {
               activeEnvName: this.activeEnvironment.getActiveName(),
               envVariableNames: variables.map((v) => v.name),
               envVariables: variables.filter((v) => v.enabled).map((v) => ({ name: v.name, value: v.value })),
+              allureStories,
             });
           } else {
             postToWebview({ type: 'error', message: 'Document contains invalid Albert request JSON.' });
@@ -133,6 +138,86 @@ export class RequestEditorProvider implements vscode.CustomTextEditorProvider {
         }
         case 'diagnostics': {
           this.handleDiagnostics(document, message.diagnostics);
+          break;
+        }
+        case 'pickEpic': {
+          try {
+            const files = await vscode.workspace.findFiles('**/*.abepic');
+            if (files.length === 0) {
+              vscode.window.showWarningMessage('No .abepic files found in the workspace.');
+              break;
+            }
+            const items = files.map(file => {
+              const relative = vscode.workspace.asRelativePath(file);
+              return {
+                label: path.basename(file.fsPath),
+                description: relative,
+                uri: file
+              };
+            });
+            const selected = await vscode.window.showQuickPick(items, { placeHolder: 'Select Epic file' });
+            if (selected) {
+              const relativeEpicPath = path.relative(path.dirname(document.uri.fsPath), selected.uri.fsPath).replace(/\\/g, '/');
+              postToWebview({ type: 'epicPicked', epicPath: relativeEpicPath });
+            }
+          } catch (err: any) {
+            vscode.window.showErrorMessage(`Failed to pick Epic file: ${err.message}`);
+          }
+          break;
+        }
+        case 'pickFeature': {
+          try {
+            if (!message.epicPath) {
+              vscode.window.showWarningMessage('Please pick an Epic file first.');
+              break;
+            }
+            const absoluteEpicPath = path.resolve(path.dirname(document.uri.fsPath), message.epicPath);
+            const files = await vscode.workspace.findFiles('**/*.abfeat');
+            const matchedFeatures = [];
+            for (const file of files) {
+              try {
+                const fileBytes = await vscode.workspace.fs.readFile(file);
+                const parsed = JSON.parse(Buffer.from(fileBytes).toString('utf8'));
+                if (parsed && parsed.epicPath) {
+                  const absoluteEpicForFeature = path.resolve(path.dirname(file.fsPath), parsed.epicPath);
+                  if (absoluteEpicForFeature === absoluteEpicPath) {
+                    matchedFeatures.push({
+                      file,
+                      name: parsed.name || path.basename(file.fsPath, '.abfeat'),
+                      stories: Array.isArray(parsed.stories) ? parsed.stories : []
+                    });
+                  }
+                }
+              } catch (err) {
+                console.error('[Albert] Failed to parse feature file', file.fsPath, err);
+              }
+            }
+            if (matchedFeatures.length === 0) {
+              vscode.window.showWarningMessage('No related .abfeat files found for the selected Epic.');
+              break;
+            }
+            const items = matchedFeatures.map(feat => {
+              const relative = vscode.workspace.asRelativePath(feat.file);
+              return {
+                label: feat.name,
+                description: relative,
+                detail: `Stories: ${feat.stories.join(', ')}`,
+                feat
+              };
+            });
+            const selected = await vscode.window.showQuickPick(items, { placeHolder: 'Select Feature' });
+            if (selected) {
+              const relativeFeaturePath = path.relative(path.dirname(document.uri.fsPath), selected.feat.file.fsPath).replace(/\\/g, '/');
+              postToWebview({
+                type: 'featurePicked',
+                featurePath: relativeFeaturePath,
+                featureName: selected.feat.name,
+                stories: selected.feat.stories
+              });
+            }
+          } catch (err: any) {
+            vscode.window.showErrorMessage(`Failed to pick Feature file: ${err.message}`);
+          }
           break;
         }
       }
@@ -272,7 +357,7 @@ export class RequestEditorProvider implements vscode.CustomTextEditorProvider {
 </head>
 <body>
   <div id="root"></div>
-  <script nonce="${nonce}">window.akrpWorkerBaseUri = ${JSON.stringify(workerBaseUri)};</script>
+  <script nonce="${nonce}">window.albertWorkerBaseUri = ${JSON.stringify(workerBaseUri)};</script>
   <script nonce="${nonce}" src="${scriptUri}"></script>
 </body>
 </html>`;
@@ -376,11 +461,50 @@ function applyChangesToLocalVariables(
 function tryParseRequestFile(text: string): RequestFile | null {
   try {
     const parsed = JSON.parse(text);
-    if (parsed && parsed.akrpType === 'request' && parsed.akrpVersion === 1 && parsed.request) {
+    if (parsed && parsed.albertType === 'request' && parsed.albertVersion === 1 && parsed.request) {
+      if (!parsed.allureReportConfig) {
+        parsed.allureReportConfig = {
+          description: '',
+          severity: 'normal',
+          feature: '',
+          story: '',
+          suite: '',
+          owner: '',
+          tags: [],
+          epicPath: '',
+          featurePath: '',
+        };
+      }
+      if (!Array.isArray(parsed.allureReportConfig.tags)) {
+        parsed.allureReportConfig.tags = [];
+      }
+      if (parsed.allureReportConfig.epicPath === undefined) {
+        parsed.allureReportConfig.epicPath = '';
+      }
+      if (parsed.allureReportConfig.featurePath === undefined) {
+        parsed.allureReportConfig.featurePath = '';
+      }
       return parsed as RequestFile;
     }
     return null;
   } catch {
     return null;
   }
+}
+
+async function resolveAllureStories(requestFilePath: string, featurePath?: string): Promise<string[]> {
+  if (!featurePath) {
+    return [];
+  }
+  try {
+    const absoluteFeaturePath = path.resolve(path.dirname(requestFilePath), featurePath);
+    const fileBytes = await vscode.workspace.fs.readFile(vscode.Uri.file(absoluteFeaturePath));
+    const parsed = JSON.parse(Buffer.from(fileBytes).toString('utf8'));
+    if (parsed && Array.isArray(parsed.stories)) {
+      return parsed.stories.map((s: any) => String(s));
+    }
+  } catch (err) {
+    console.error('[Albert] Failed to resolve stories from featurePath', featurePath, err);
+  }
+  return [];
 }

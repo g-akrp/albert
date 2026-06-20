@@ -1,0 +1,11 @@
+{
+  "albertType": "feature",
+  "albertVersion": 1,
+  "epicPath": "./user-management.abepic",
+  "name": "User Retrieval",
+  "stories": [
+    "List Users Story",
+    "Get Single User Story",
+    "Search Users Story"
+  ]
+}

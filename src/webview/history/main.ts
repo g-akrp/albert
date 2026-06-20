@@ -9,8 +9,8 @@ injectStyles();
 injectHistoryStyles();
 
 const root = document.getElementById('root')!;
-root.innerHTML = '<div class="akrp-main"><div id="akrp-history-root"></div></div>';
-const historyRoot = document.getElementById('akrp-history-root') as HTMLElement;
+root.innerHTML = '<div class="albert-main"><div id="albert-history-root"></div></div>';
+const historyRoot = document.getElementById('albert-history-root') as HTMLElement;
 
 let file: HistoryFile | null = null;
 let errorMessage: string | null = null;
@@ -21,7 +21,7 @@ function render(): void {
 
   if (errorMessage) {
     const err = document.createElement('div');
-    err.className = 'akrp-response-status err';
+    err.className = 'albert-response-status err';
     err.textContent = errorMessage;
     historyRoot.appendChild(err);
     return;
@@ -29,18 +29,18 @@ function render(): void {
   if (!file) return;
 
   const title = document.createElement('div');
-  title.className = 'akrp-history-title';
+  title.className = 'albert-history-title';
   title.textContent = file.name || 'Flow run history';
   historyRoot.appendChild(title);
 
   const sub = document.createElement('div');
-  sub.className = 'akrp-env-readout';
+  sub.className = 'albert-env-readout';
   sub.textContent = `${file.flowRuns.length} run${file.flowRuns.length === 1 ? '' : 's'}`;
   historyRoot.appendChild(sub);
 
   if (file.flowRuns.length === 0) {
     const empty = document.createElement('div');
-    empty.className = 'akrp-empty';
+    empty.className = 'albert-empty';
     empty.textContent = 'This history file has no runs.';
     historyRoot.appendChild(empty);
     return;
@@ -51,19 +51,19 @@ function render(): void {
 
 function renderEntry(entry: FlowRunHistoryEntry): HTMLElement {
   const item = document.createElement('div');
-  item.className = 'akrp-flow-history-item';
+  item.className = 'albert-flow-history-item';
 
   const isOpen = expanded.has(entry.id);
   const failed = !entry.result.ok;
   const stepCount = entry.result.steps.length;
 
   const summary = document.createElement('div');
-  summary.className = 'akrp-flow-history-summary';
-  summary.innerHTML = `<span class="akrp-flow-history-caret">${isOpen ? '▾' : '▸'}</span>
+  summary.className = 'albert-flow-history-summary';
+  summary.innerHTML = `<span class="albert-flow-history-caret">${isOpen ? '▾' : '▸'}</span>
     <span class="${failed ? 'err' : 'ok'}">${failed ? '✗' : '✓'}</span>
     <strong>${escapeHtml(entry.flowName)}</strong>
-    <span class="akrp-flow-history-time">${new Date(entry.timestamp).toLocaleString()}</span>
-    <span class="akrp-flow-history-meta">${stepCount} step${stepCount === 1 ? '' : 's'}</span>`;
+    <span class="albert-flow-history-time">${new Date(entry.timestamp).toLocaleString()}</span>
+    <span class="albert-flow-history-meta">${stepCount} step${stepCount === 1 ? '' : 's'}</span>`;
   summary.onclick = () => {
     if (expanded.has(entry.id)) expanded.delete(entry.id);
     else expanded.add(entry.id);
@@ -106,17 +106,17 @@ function escapeHtml(s: string): string {
 function injectHistoryStyles(): void {
   const style = document.createElement('style');
   style.textContent = `
-    .akrp-history-title { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
-    .akrp-env-readout { color: var(--vscode-descriptionForeground); font-size: 12px; margin-bottom: 10px; }
-    .akrp-flow-history-item { border: 1px solid var(--vscode-panel-border); border-radius: 4px; margin-bottom: 6px; }
-    .akrp-flow-history-summary { display: flex; align-items: center; gap: 8px; padding: 6px 8px; cursor: pointer; font-size: 12px; }
-    .akrp-flow-history-summary:hover { background: var(--vscode-list-hoverBackground); }
-    .akrp-flow-history-summary .ok { color: var(--vscode-testing-iconPassed, #2cbb4b); }
-    .akrp-flow-history-summary .err { color: var(--vscode-testing-iconFailed, #d9534f); }
-    .akrp-flow-history-caret { width: 12px; color: var(--vscode-descriptionForeground); }
-    .akrp-flow-history-time { color: var(--vscode-descriptionForeground); }
-    .akrp-flow-history-meta { color: var(--vscode-descriptionForeground); }
-    .akrp-flow-history-item > div:not(.akrp-flow-history-summary) { padding: 0 8px 8px; }
+    .albert-history-title { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+    .albert-env-readout { color: var(--albert-muted); font-size: 12px; margin-bottom: 10px; }
+    .albert-flow-history-item { border: 1px solid var(--albert-border); border-radius: var(--albert-radius); margin-bottom: 6px; overflow: hidden; }
+    .albert-flow-history-summary { display: flex; align-items: center; gap: 8px; padding: 8px 10px; cursor: pointer; font-size: 12px; }
+    .albert-flow-history-summary:hover { background: var(--vscode-list-hoverBackground); }
+    .albert-flow-history-summary .ok { color: var(--albert-ok); }
+    .albert-flow-history-summary .err { color: var(--albert-err); }
+    .albert-flow-history-caret { width: 12px; color: var(--albert-muted); }
+    .albert-flow-history-time { color: var(--albert-muted); }
+    .albert-flow-history-meta { color: var(--albert-muted); }
+    .albert-flow-history-item > div:not(.albert-flow-history-summary) { padding: 0 10px 10px; }
   ` + flowResultStyles();
   document.head.appendChild(style);
 }

@@ -2,11 +2,11 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Albert Environment Config",
   "type": "object",
-  "required": ["akrpType", "akrpVersion", "name", "variables", "settings"],
+  "required": ["albertType", "albertVersion", "name", "variables", "settings"],
   "additionalProperties": false,
   "properties": {
-    "akrpType": { "const": "env_config" },
-    "akrpVersion": { "const": 1 },
+    "albertType": { "const": "env_config" },
+    "albertVersion": { "const": 1 },
     "name": { "type": "string" },
     "variables": {
       "type": "array",

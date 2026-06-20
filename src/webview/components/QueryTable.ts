@@ -24,7 +24,7 @@ export function renderQueryTable(
 
   rows.forEach((row, idx) => {
     const rowEl = document.createElement('div');
-    rowEl.className = 'akrp-kv-row';
+    rowEl.className = 'albert-kv-row';
 
     const enabled = document.createElement('input');
     enabled.type = 'checkbox';

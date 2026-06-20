@@ -1,6 +1,6 @@
 {
-  "akrpType": "sim",
-  "akrpVersion": 1,
+  "albertType": "sim",
+  "albertVersion": 1,
   "name": "Smoke load",
   "profile": { "type": "load", "durationSec": 30, "rampUpSec": 5 },
   "flows": [

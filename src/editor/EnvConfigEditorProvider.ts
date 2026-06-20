@@ -100,7 +100,7 @@ export class EnvConfigEditorProvider implements vscode.CustomTextEditorProvider 
 function tryParseEnvConfigFile(text: string): EnvConfigFile | null {
   try {
     const parsed = JSON.parse(text);
-    if (parsed && parsed.akrpType === 'env_config' && parsed.akrpVersion === 1 && Array.isArray(parsed.variables)) {
+    if (parsed && parsed.albertType === 'env_config' && parsed.albertVersion === 1 && Array.isArray(parsed.variables)) {
       return parsed as EnvConfigFile;
     }
     return null;

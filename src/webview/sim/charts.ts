@@ -34,21 +34,21 @@ export function lineChart(title: string, series: LineSeries[], opts: LineChartOp
   const fmt = opts.yFormat ?? ((n) => String(Math.round(n)));
 
   const wrap = document.createElement('div');
-  wrap.className = 'akrp-chart';
+  wrap.className = 'albert-chart';
   wrap.appendChild(chartTitle(title));
 
   const svg = document.createElementNS(SVG_NS, 'svg');
   svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-  svg.setAttribute('class', 'akrp-chart-svg');
+  svg.setAttribute('class', 'albert-chart-svg');
   svg.setAttribute('preserveAspectRatio', 'none');
 
   // y gridlines + labels
   const gridLines = 4;
   for (let i = 0; i <= gridLines; i++) {
     const y = padT + (plotH * i) / gridLines;
-    svg.appendChild(line(padL, y, width - padR, y, 'akrp-chart-grid'));
+    svg.appendChild(line(padL, y, width - padR, y, 'albert-chart-grid'));
     const value = yMax * (1 - i / gridLines);
-    svg.appendChild(text(padL - 6, y + 3, fmt(value), 'akrp-chart-axis', 'end'));
+    svg.appendChild(text(padL - 6, y + 3, fmt(value), 'albert-chart-axis', 'end'));
   }
 
   const xStep = maxLen > 1 ? plotW / (maxLen - 1) : 0;
@@ -74,27 +74,27 @@ export function lineChart(title: string, series: LineSeries[], opts: LineChartOp
 /** A grouped/labelled horizontal bar chart for summary comparisons. */
 export function barChart(title: string, bars: { label: string; value: number; color: string }[], yFormat: (n: number) => string): HTMLElement {
   const wrap = document.createElement('div');
-  wrap.className = 'akrp-chart';
+  wrap.className = 'albert-chart';
   wrap.appendChild(chartTitle(title));
 
   const max = niceMax(Math.max(0, ...bars.map((b) => b.value)));
   const list = document.createElement('div');
-  list.className = 'akrp-bar-list';
+  list.className = 'albert-bar-list';
   for (const b of bars) {
     const row = document.createElement('div');
-    row.className = 'akrp-bar-row';
+    row.className = 'albert-bar-row';
     const label = document.createElement('span');
-    label.className = 'akrp-bar-label';
+    label.className = 'albert-bar-label';
     label.textContent = b.label;
     const track = document.createElement('div');
-    track.className = 'akrp-bar-track';
+    track.className = 'albert-bar-track';
     const fill = document.createElement('div');
-    fill.className = 'akrp-bar-fill';
+    fill.className = 'albert-bar-fill';
     fill.style.width = `${max > 0 ? (b.value / max) * 100 : 0}%`;
     fill.style.background = b.color;
     track.appendChild(fill);
     const val = document.createElement('span');
-    val.className = 'akrp-bar-value';
+    val.className = 'albert-bar-value';
     val.textContent = yFormat(b.value);
     row.append(label, track, val);
     list.appendChild(row);
@@ -129,7 +129,7 @@ export function sankeyChart(title: string, columns: SankeyNode[][], links: Sanke
   const padB = 8;
 
   const wrap = document.createElement('div');
-  wrap.className = 'akrp-chart';
+  wrap.className = 'albert-chart';
   wrap.appendChild(chartTitle(title));
 
   const colCount = columns.length;
@@ -154,7 +154,7 @@ export function sankeyChart(title: string, columns: SankeyNode[][], links: Sanke
 
   const svg = document.createElementNS(SVG_NS, 'svg');
   svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-  svg.setAttribute('class', 'akrp-chart-svg');
+  svg.setAttribute('class', 'albert-chart-svg');
 
   // Links first (so nodes draw on top).
   const srcOffset = new Map<string, number>();
@@ -198,7 +198,7 @@ export function sankeyChart(title: string, columns: SankeyNode[][], links: Sanke
 
       const lastCol = ci === colCount - 1;
       const tx = lastCol ? g.x - 6 : g.x + nodeWidth + 6;
-      const label = text(tx, g.y + g.h / 2 + 3, `${node.label}`, 'akrp-sankey-label', lastCol ? 'end' : 'start');
+      const label = text(tx, g.y + g.h / 2 + 3, `${node.label}`, 'albert-sankey-label', lastCol ? 'end' : 'start');
       svg.appendChild(label);
     }
   });
@@ -209,19 +209,19 @@ export function sankeyChart(title: string, columns: SankeyNode[][], links: Sanke
 
 function chartTitle(title: string): HTMLElement {
   const el = document.createElement('div');
-  el.className = 'akrp-chart-title';
+  el.className = 'albert-chart-title';
   el.textContent = title;
   return el;
 }
 
 function legend(series: LineSeries[]): HTMLElement {
   const el = document.createElement('div');
-  el.className = 'akrp-chart-legend';
+  el.className = 'albert-chart-legend';
   for (const s of series) {
     const item = document.createElement('span');
-    item.className = 'akrp-legend-item';
+    item.className = 'albert-legend-item';
     const swatch = document.createElement('span');
-    swatch.className = 'akrp-legend-swatch';
+    swatch.className = 'albert-legend-swatch';
     swatch.style.background = s.color;
     if (s.dashed) swatch.style.opacity = '0.6';
     item.append(swatch, document.createTextNode(s.name));

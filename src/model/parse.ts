@@ -7,7 +7,7 @@ import { EnvConfigFile, FlowFile, FlowStep, HistoryFile, RequestFile, SimFile } 
 
 export function parseRequestFile(text: string): RequestFile | null {
   const parsed = tryJson(text);
-  if (parsed && parsed.akrpType === 'request' && parsed.akrpVersion === 1 && parsed.request) {
+  if (parsed && parsed.albertType === 'request' && parsed.albertVersion === 1 && parsed.request) {
     return parsed as RequestFile;
   }
   return null;
@@ -15,7 +15,7 @@ export function parseRequestFile(text: string): RequestFile | null {
 
 export function parseFlowFile(text: string): FlowFile | null {
   const parsed = tryJson(text);
-  if (parsed && parsed.akrpType === 'flow' && parsed.akrpVersion === 1 && Array.isArray(parsed.steps)) {
+  if (parsed && parsed.albertType === 'flow' && parsed.albertVersion === 1 && Array.isArray(parsed.steps)) {
     for (const s of parsed.steps as FlowStep[]) if (!Array.isArray(s.captures)) s.captures = [];
     return parsed as FlowFile;
   }
@@ -24,7 +24,7 @@ export function parseFlowFile(text: string): FlowFile | null {
 
 export function parseSimFile(text: string): SimFile | null {
   const parsed = tryJson(text);
-  if (parsed && parsed.akrpType === 'sim' && parsed.akrpVersion === 1 && parsed.profile && Array.isArray(parsed.flows)) {
+  if (parsed && parsed.albertType === 'sim' && parsed.albertVersion === 1 && parsed.profile && Array.isArray(parsed.flows)) {
     return parsed as SimFile;
   }
   return null;
@@ -32,7 +32,7 @@ export function parseSimFile(text: string): SimFile | null {
 
 export function parseEnvConfigFile(text: string): EnvConfigFile | null {
   const parsed = tryJson(text);
-  if (parsed && parsed.akrpType === 'env_config' && parsed.akrpVersion === 1 && Array.isArray(parsed.variables)) {
+  if (parsed && parsed.albertType === 'env_config' && parsed.albertVersion === 1 && Array.isArray(parsed.variables)) {
     return parsed as EnvConfigFile;
   }
   return null;
@@ -40,7 +40,7 @@ export function parseEnvConfigFile(text: string): EnvConfigFile | null {
 
 export function parseHistoryFile(text: string): HistoryFile | null {
   const parsed = tryJson(text);
-  if (parsed && parsed.akrpType === 'history' && parsed.akrpVersion === 1 && Array.isArray(parsed.flowRuns)) {
+  if (parsed && parsed.albertType === 'history' && parsed.albertVersion === 1 && Array.isArray(parsed.flowRuns)) {
     return parsed as HistoryFile;
   }
   return null;

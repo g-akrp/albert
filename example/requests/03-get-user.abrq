@@ -1,6 +1,6 @@
 {
-  "akrpType": "request",
-  "akrpVersion": 1,
+  "albertType": "request",
+  "albertVersion": 1,
   "name": "Get user by id",
   "request": {
     "method": "GET",
@@ -26,5 +26,16 @@
     "enabled": true,
     "schema": "{\n  \"type\": \"object\",\n  \"required\": [\"id\", \"name\", \"email\"],\n  \"properties\": {\n    \"id\": { \"type\": \"number\" },\n    \"name\": { \"type\": \"string\" },\n    \"email\": { \"type\": \"string\" },\n    \"active\": { \"type\": \"boolean\" }\n  }\n}"
   },
-  "sampleResponse": "{\n  \"id\": 1,\n  \"name\": \"Ada Lovelace\",\n  \"email\": \"ada@example.com\",\n  \"active\": true\n}"
+  "sampleResponse": "{\n  \"id\": 1,\n  \"name\": \"Ada Lovelace\",\n  \"email\": \"ada@example.com\",\n  \"active\": true\n}",
+  "allureReportConfig": {
+    "description": "Gets details of a single user by ID",
+    "severity": "normal",
+    "feature": "User Retrieval",
+    "story": "Get Single User Story",
+    "suite": "User Management Tests",
+    "owner": "Akarapon",
+    "tags": ["read"],
+    "epicPath": "../user-management.abepic",
+    "featurePath": "../user-retrieval.abfeat"
+  }
 }

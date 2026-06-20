@@ -1,0 +1,9 @@
+{
+  "albertType": "feature",
+  "albertVersion": 1,
+  "epicPath": "./user-management.abepic",
+  "name": "User Authentication",
+  "stories": [
+    "Login Story"
+  ]
+}

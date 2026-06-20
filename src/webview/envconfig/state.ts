@@ -10,6 +10,7 @@ class EnvStore {
 
   private listeners: Listener[] = [];
   private editTimer: ReturnType<typeof setTimeout> | null = null;
+  private editInFlight = false;
 
   subscribe(fn: Listener): void {
     this.listeners.push(fn);
@@ -20,6 +21,11 @@ class EnvStore {
   }
 
   setFile(file: EnvConfigFile): void {
+    if (this.editTimer) return;
+    if (this.editInFlight) {
+      this.editInFlight = false;
+      if (JSON.stringify(file) === JSON.stringify(this.file)) return;
+    }
     this.file = file;
     this.notify();
   }
@@ -38,6 +44,8 @@ class EnvStore {
   private scheduleEdit(): void {
     if (this.editTimer) clearTimeout(this.editTimer);
     this.editTimer = setTimeout(() => {
+      this.editTimer = null;
+      this.editInFlight = true;
       vscodeApi.postMessage({ type: 'edit', file: this.file });
     }, 200);
   }

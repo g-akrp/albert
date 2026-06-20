@@ -40,9 +40,11 @@ class RequestStore {
   currentPreview: ResolvedRequestPreview | null = null;
   history: HistoryEntry[] = [];
   expandedHistoryIds = new Set<string>();
+  availableStories: string[] = [];
 
   private listeners: Listener[] = [];
   private editTimer: ReturnType<typeof setTimeout> | null = null;
+  private editInFlight = false;
   private diagTimer: ReturnType<typeof setTimeout> | null = null;
 
   subscribe(fn: Listener): void {
@@ -54,6 +56,11 @@ class RequestStore {
   }
 
   setFile(file: RequestFile): void {
+    if (this.editTimer) return;
+    if (this.editInFlight) {
+      this.editInFlight = false;
+      if (JSON.stringify(file) === JSON.stringify(this.file)) return;
+    }
     this.file = file;
     this.notify();
   }
@@ -76,6 +83,8 @@ class RequestStore {
   private scheduleEdit(): void {
     if (this.editTimer) clearTimeout(this.editTimer);
     this.editTimer = setTimeout(() => {
+      this.editTimer = null;
+      this.editInFlight = true;
       vscodeApi.postMessage({ type: 'edit', file: this.file });
     }, 200);
   }
@@ -112,6 +121,14 @@ class RequestStore {
 
   requestPreview(): void {
     vscodeApi.postMessage({ type: 'requestPreview' });
+  }
+
+  pickEpic(): void {
+    vscodeApi.postMessage({ type: 'pickEpic' });
+  }
+
+  pickFeature(epicPath: string): void {
+    vscodeApi.postMessage({ type: 'pickFeature', epicPath });
   }
 
   setPreviewResult(preview: ResolvedRequestPreview): void {

@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Albert Epic",
+  "type": "object",
+  "required": ["albertType", "albertVersion", "name", "features"],
+  "additionalProperties": false,
+  "properties": {
+    "albertType": { "const": "epic" },
+    "albertVersion": { "const": 1 },
+    "name": { "type": "string" },
+    "features": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

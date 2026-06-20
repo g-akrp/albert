@@ -9,11 +9,11 @@ import { store, vscodeApi } from './state';
 
 declare global {
   interface Window {
-    akrpWorkerBaseUri?: string;
+    albertWorkerBaseUri?: string;
   }
 }
 
-setWorkerBaseUri(window.akrpWorkerBaseUri ?? '');
+setWorkerBaseUri(window.albertWorkerBaseUri ?? '');
 
 const METHODS: HttpMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
 
@@ -21,14 +21,14 @@ injectStyles();
 
 const root = document.getElementById('root')!;
 root.innerHTML = `
-  <div class="akrp-main">
-    <div id="akrp-header"></div>
-    <div id="akrp-tabs"></div>
+  <div class="albert-main">
+    <div id="albert-header"></div>
+    <div id="albert-tabs"></div>
   </div>
 `;
 
-const headerEl = document.getElementById('akrp-header') as HTMLElement;
-const tabsEl = document.getElementById('akrp-tabs') as HTMLElement;
+const headerEl = document.getElementById('albert-header') as HTMLElement;
+const tabsEl = document.getElementById('albert-tabs') as HTMLElement;
 
 function render(): void {
   renderHeader(headerEl);
@@ -36,29 +36,76 @@ function render(): void {
   store.scheduleDiagnostics();
 }
 
+function styleMethodSelect(select: HTMLSelectElement): void {
+  const method = select.value as HttpMethod;
+  const colors: Record<HttpMethod, { color: string; bg: string; border: string }> = {
+    GET: { color: 'var(--vscode-testing-iconPassed, #2cbb4b)', bg: 'rgba(44, 187, 75, 0.1)', border: 'rgba(44, 187, 75, 0.4)' },
+    POST: { color: '#e28743', bg: 'rgba(226, 135, 67, 0.1)', border: 'rgba(226, 135, 67, 0.4)' },
+    PUT: { color: '#2d8cf0', bg: 'rgba(45, 140, 240, 0.1)', border: 'rgba(45, 140, 240, 0.4)' },
+    DELETE: { color: 'var(--vscode-testing-iconFailed, #d9534f)', bg: 'rgba(217, 83, 79, 0.1)', border: 'rgba(217, 83, 79, 0.4)' },
+    PATCH: { color: '#a951ed', bg: 'rgba(169, 81, 237, 0.1)', border: 'rgba(169, 81, 237, 0.4)' },
+    HEAD: { color: 'var(--vscode-descriptionForeground, gray)', bg: 'rgba(128, 128, 128, 0.1)', border: 'rgba(128, 128, 128, 0.3)' },
+    OPTIONS: { color: 'var(--vscode-descriptionForeground, gray)', bg: 'rgba(128, 128, 128, 0.1)', border: 'rgba(128, 128, 128, 0.3)' },
+  };
+
+  const scheme = colors[method] || colors.GET;
+  select.style.color = scheme.color;
+  select.style.backgroundColor = scheme.bg;
+  select.style.borderColor = scheme.border;
+  select.style.fontWeight = 'bold';
+}
+
 function renderHeader(container: HTMLElement): void {
   container.innerHTML = '';
+
+  const topRow = document.createElement('div');
+  topRow.style.display = 'flex';
+  topRow.style.alignItems = 'center';
+  topRow.style.justifyContent = 'space-between';
+  topRow.style.gap = '12px';
+  topRow.style.marginBottom = '12px';
 
   const nameInput = document.createElement('input');
   nameInput.type = 'text';
   nameInput.value = store.file.name;
   nameInput.style.fontWeight = '600';
-  nameInput.style.marginBottom = '6px';
-  nameInput.style.width = '100%';
+  nameInput.style.flex = '1';
   nameInput.oninput = () => {
     store.mutateQuiet(() => {
       store.file.name = nameInput.value;
     });
   };
-  container.appendChild(nameInput);
+  topRow.appendChild(nameInput);
 
-  const envReadout = document.createElement('div');
-  envReadout.className = 'akrp-env-readout';
-  envReadout.textContent = `Env: ${store.activeEnvName ?? 'none'}`;
-  container.appendChild(envReadout);
+  const envBadge = document.createElement('div');
+  const hasEnv = !!store.activeEnvName;
+  envBadge.className = 'albert-env-badge';
+  envBadge.style.display = 'inline-flex';
+  envBadge.style.alignItems = 'center';
+  envBadge.style.gap = '6px';
+  envBadge.style.padding = '4px 10px';
+  envBadge.style.borderRadius = '12px';
+  envBadge.style.fontSize = '11px';
+  envBadge.style.fontWeight = '600';
+  envBadge.style.border = '1px solid var(--albert-border)';
+  envBadge.style.background = 'var(--vscode-editorWidget-background, rgba(128, 128, 128, 0.08))';
+
+  const dot = document.createElement('span');
+  dot.style.width = '6px';
+  dot.style.height = '6px';
+  dot.style.borderRadius = '50%';
+  dot.style.background = hasEnv ? 'var(--albert-ok, #2cbb4b)' : 'var(--albert-muted, #808080)';
+
+  const text = document.createElement('span');
+  text.textContent = hasEnv ? `Env: ${store.activeEnvName}` : 'No environment';
+  text.style.color = hasEnv ? 'var(--vscode-foreground)' : 'var(--albert-muted)';
+
+  envBadge.append(dot, text);
+  topRow.appendChild(envBadge);
+  container.appendChild(topRow);
 
   const urlBar = document.createElement('div');
-  urlBar.className = 'akrp-url-bar';
+  urlBar.className = 'albert-url-bar';
 
   const methodSelect = document.createElement('select');
   for (const method of METHODS) {
@@ -68,10 +115,13 @@ function renderHeader(container: HTMLElement): void {
     if (method === store.file.request.method) opt.selected = true;
     methodSelect.appendChild(opt);
   }
+  styleMethodSelect(methodSelect);
+
   methodSelect.onchange = () => {
     store.mutate(() => {
       store.file.request.method = methodSelect.value as HttpMethod;
     });
+    styleMethodSelect(methodSelect);
   };
 
   const endpointInput = document.createElement('input');
@@ -127,9 +177,11 @@ onHostMessage<RequestHostToWebviewMessage>((message) => {
       store.setFile(message.file);
       store.setFileUri(message.fileUri);
       store.setActiveEnvName(message.activeEnvName, message.envVariableNames, message.envVariables);
+      store.availableStories = message.allureStories || [];
       break;
     case 'documentChanged':
       store.setFile(message.file);
+      store.availableStories = message.allureStories || [];
       break;
     case 'activeEnvironmentChanged':
       store.setActiveEnvName(message.activeEnvName, message.envVariableNames, message.envVariables);
@@ -142,6 +194,23 @@ onHostMessage<RequestHostToWebviewMessage>((message) => {
       break;
     case 'previewResult':
       store.setPreviewResult(message.preview);
+      break;
+    case 'epicPicked':
+      store.mutate((file) => {
+        file.allureReportConfig.epicPath = message.epicPath;
+        file.allureReportConfig.featurePath = '';
+        file.allureReportConfig.feature = '';
+        file.allureReportConfig.story = '';
+      });
+      store.availableStories = [];
+      break;
+    case 'featurePicked':
+      store.mutate((file) => {
+        file.allureReportConfig.featurePath = message.featurePath;
+        file.allureReportConfig.feature = message.featureName;
+        file.allureReportConfig.story = message.stories[0] || '';
+      });
+      store.availableStories = message.stories;
       break;
     case 'error':
       console.error('[Albert]', message.message);

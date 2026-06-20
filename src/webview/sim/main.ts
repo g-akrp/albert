@@ -8,8 +8,8 @@ injectStyles();
 injectSimStyles();
 
 const root = document.getElementById('root')!;
-root.innerHTML = '<div class="akrp-main"><div id="akrp-sim-root"></div></div>';
-const simRoot = document.getElementById('akrp-sim-root') as HTMLElement;
+root.innerHTML = '<div class="albert-main"><div id="albert-sim-root"></div></div>';
+const simRoot = document.getElementById('albert-sim-root') as HTMLElement;
 
 function render(): void {
   renderSim(simRoot);
@@ -58,46 +58,45 @@ render();
 function injectSimStyles(): void {
   const style = document.createElement('style');
   style.textContent = `
-    .akrp-env-readout { color: var(--vscode-descriptionForeground); font-size: 12px; margin-bottom: 8px; }
-    .akrp-flow-toolbar { display: flex; gap: 6px; margin-bottom: 12px; }
-    .akrp-icon-btn { padding: 2px 6px; min-width: 24px; }
-    .akrp-sim-profile { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 12px; }
-    .akrp-sim-field { display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: var(--vscode-descriptionForeground); }
-    .akrp-sim-flow-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-    .akrp-flow-req-path { font-family: var(--vscode-editor-font-family); font-size: 12px; }
-    .akrp-flow-req-path.missing { color: var(--vscode-errorForeground); }
-    .akrp-sim-tps-label { font-size: 11px; color: var(--vscode-descriptionForeground); }
-    .akrp-section-title { font-weight: 600; margin: 14px 0 6px; }
-    .akrp-flow-validate { display: flex; align-items: center; gap: 6px; font-size: 12px; }
-    .akrp-row { display: flex; gap: 10px; align-items: center; margin-top: 6px; }
-    .akrp-sim-apm-status { font-size: 12px; }
-    .akrp-sim-apm-status.ok { color: var(--vscode-testing-iconPassed, #2cbb4b); }
-    .akrp-sim-apm-status.missing { color: var(--vscode-descriptionForeground); }
-    .akrp-flow-results { margin-top: 16px; border-top: 1px solid var(--vscode-panel-border); padding-top: 8px; }
-    .akrp-response-status.ok { color: var(--vscode-testing-iconPassed, #2cbb4b); }
-    .akrp-response-status.err { color: var(--vscode-testing-iconFailed, #d9534f); }
-    .akrp-chart { margin: 10px 0; max-width: 560px; }
-    .akrp-chart-title { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
-    .akrp-chart-svg { width: 100%; height: auto; background: var(--vscode-textCodeBlock-background); border: 1px solid var(--vscode-panel-border); }
-    .akrp-chart-grid { stroke: var(--vscode-panel-border); stroke-width: 0.5; }
-    .akrp-chart-axis { fill: var(--vscode-descriptionForeground); font-size: 9px; }
-    .akrp-chart-legend { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 4px; font-size: 11px; }
-    .akrp-legend-item { display: flex; align-items: center; gap: 4px; }
-    .akrp-legend-swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
-    .akrp-bar-list { display: flex; flex-direction: column; gap: 4px; }
-    .akrp-bar-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
-    .akrp-bar-label { width: 140px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .akrp-bar-track { flex: 1; height: 12px; background: var(--vscode-textCodeBlock-background); border-radius: 2px; overflow: hidden; }
-    .akrp-bar-fill { height: 100%; }
-    .akrp-bar-value { width: 60px; text-align: right; flex-shrink: 0; }
-    .akrp-sim-summary { border-collapse: collapse; width: 100%; max-width: 720px; margin: 10px 0; font-size: 12px; }
-    .akrp-sim-summary th, .akrp-sim-summary td { border: 1px solid var(--vscode-panel-border); padding: 4px 8px; text-align: left; }
-    .akrp-sim-summary th { background: var(--vscode-textCodeBlock-background); }
-    .akrp-sim-summary tr.err td { color: var(--vscode-testing-iconFailed, #d9534f); }
-    .akrp-sim-summary-charts { display: flex; flex-direction: column; gap: 4px; }
-    .akrp-sim-view-switcher { display: flex; gap: 4px; margin: 6px 0 10px; }
-    .akrp-sim-view-switcher button { flex: 0 0 auto; }
-    .akrp-sankey-label { fill: var(--vscode-foreground); font-size: 10px; }
+    .albert-env-readout { color: var(--albert-muted); font-size: 12px; margin-bottom: 8px; }
+    .albert-flow-toolbar { display: flex; gap: 6px; margin-bottom: 12px; }
+    .albert-sim-profile { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 12px; }
+    .albert-sim-field { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--albert-muted); }
+    .albert-sim-flow-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .albert-flow-req-path { font-family: var(--vscode-editor-font-family); font-size: 12px; }
+    .albert-flow-req-path.missing { color: var(--vscode-errorForeground); }
+    .albert-sim-tps-label { font-size: 11px; color: var(--albert-muted); }
+    .albert-flow-validate { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+    .albert-row { display: flex; gap: 10px; align-items: center; margin-top: 6px; }
+    .albert-sim-apm-status { font-size: 12px; }
+    .albert-sim-apm-status.ok { color: var(--albert-ok); }
+    .albert-sim-apm-status.missing { color: var(--albert-muted); }
+    .albert-flow-results { margin-top: 16px; border-top: 1px solid var(--albert-border); padding-top: 12px; }
+    .albert-response-status.ok { color: var(--albert-ok); }
+    .albert-response-status.err { color: var(--albert-err); }
+    .albert-chart { margin: 12px 0; max-width: 560px; }
+    .albert-chart-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--albert-muted); margin-bottom: 4px; }
+    .albert-chart-svg { width: 100%; height: auto; background: var(--vscode-textCodeBlock-background); border: 1px solid var(--albert-border); border-radius: var(--albert-radius); }
+    .albert-chart-grid { stroke: var(--albert-border); stroke-width: 0.5; }
+    .albert-chart-axis { fill: var(--albert-muted); font-size: 9px; }
+    .albert-chart-legend { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px; font-size: 11px; }
+    .albert-legend-item { display: flex; align-items: center; gap: 5px; }
+    .albert-legend-swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+    .albert-bar-list { display: flex; flex-direction: column; gap: 5px; }
+    .albert-bar-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+    .albert-bar-label { width: 140px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .albert-bar-track { flex: 1; height: 12px; background: var(--vscode-textCodeBlock-background); border-radius: 6px; overflow: hidden; }
+    .albert-bar-fill { height: 100%; border-radius: 6px; }
+    .albert-bar-value { width: 60px; text-align: right; flex-shrink: 0; }
+    .albert-sim-summary { border-collapse: collapse; width: 100%; max-width: 720px; margin: 12px 0; font-size: 12px; border: 1px solid var(--albert-border); border-radius: var(--albert-radius); overflow: hidden; }
+    .albert-sim-summary th, .albert-sim-summary td { border-bottom: 1px solid var(--albert-border-subtle); padding: 6px 10px; text-align: left; }
+    .albert-sim-summary tr:last-child td { border-bottom: none; }
+    .albert-sim-summary th { background: var(--vscode-editorWidget-background, var(--vscode-textCodeBlock-background)); font-weight: 600; }
+    .albert-sim-summary tr.err td { color: var(--albert-err); }
+    .albert-sim-summary-charts { display: flex; flex-direction: column; gap: 4px; }
+    .albert-sim-view-switcher { display: flex; gap: 4px; margin: 8px 0 12px; }
+    .albert-sim-view-switcher button { flex: 0 0 auto; }
+    .albert-sankey-label { fill: var(--vscode-foreground); font-size: 10px; }
   `;
   document.head.appendChild(style);
 }

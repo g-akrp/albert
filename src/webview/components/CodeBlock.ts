@@ -15,16 +15,16 @@ export function createCodeBlock(
   let current = initial;
 
   const wrap = document.createElement('div');
-  wrap.className = 'akrp-codeblock';
+  wrap.className = 'albert-codeblock';
 
   const showCopy = opts.copy !== false;
   if (showCopy || opts.toolbarExtra) {
     const bar = document.createElement('div');
-    bar.className = 'akrp-codeblock-toolbar';
+    bar.className = 'albert-codeblock-toolbar';
     if (opts.toolbarExtra) bar.appendChild(opts.toolbarExtra);
     if (showCopy) {
       const btn = document.createElement('button');
-      btn.className = 'secondary akrp-copy-btn';
+      btn.className = 'secondary albert-copy-btn';
       btn.textContent = 'Copy';
       btn.onclick = () => {
         navigator.clipboard.writeText(current).then(

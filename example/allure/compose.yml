@@ -1,0 +1,13 @@
+# Allure Report Server for the Albert examples. Serves http://localhost:5050.
+# Start:  podman-compose -f example/allure/compose.yml up   (or: docker compose -f ... up)
+# Stop:   Ctrl+C, then `... down`
+version: '3'
+services:
+  allure:
+    image: docker.io/frankescobar/allure-docker-service:latest
+    ports:
+      - "5050:5050"
+    environment:
+      - CHECK_RESULTS_EVERY_SECONDS=1
+      - KEEP_HISTORY=1
+      - KEEP_HISTORY_LATEST=25

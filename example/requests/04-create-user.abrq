@@ -1,6 +1,6 @@
 {
-  "akrpType": "request",
-  "akrpVersion": 1,
+  "albertType": "request",
+  "albertVersion": 1,
   "name": "Create user",
   "request": {
     "method": "POST",
@@ -24,5 +24,16 @@
     { "id": "e_created", "target": "body", "path": "created", "operator": "equals", "expected": "true" }
   ],
   "schemaValidation": { "enabled": false, "schema": "" },
-  "sampleResponse": "{\n  \"id\": 99,\n  \"name\": \"Grace Hopper\",\n  \"created\": true\n}"
+  "sampleResponse": "{\n  \"id\": 99,\n  \"name\": \"Grace Hopper\",\n  \"created\": true\n}",
+  "allureReportConfig": {
+    "description": "Creates a new user with authorization",
+    "severity": "normal",
+    "feature": "User Provisioning",
+    "story": "Create User Story",
+    "suite": "User Management Tests",
+    "owner": "Akarapon",
+    "tags": ["write"],
+    "epicPath": "../user-management.abepic",
+    "featurePath": "../user-provisioning.abfeat"
+  }
 }

@@ -1,6 +1,6 @@
 {
-  "akrpType": "env_config",
-  "akrpVersion": 1,
+  "albertType": "env_config",
+  "albertVersion": 1,
   "name": "Local (WireMock)",
   "variables": [
     {

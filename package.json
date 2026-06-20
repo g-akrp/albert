@@ -2,7 +2,7 @@
   "name": "albert",
   "displayName": "Albert",
   "description": "API request files (.abrq) and environment configs (.abenv) with scripting, assertions, and AJV schema validation.",
-  "version": "0.4.4",
+  "version": "0.4.16",
   "publisher": "g-akrp",
   "engines": {
     "vscode": "^1.90.0"
@@ -63,6 +63,26 @@
           ".abh"
         ],
         "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "albert-epic-json",
+        "aliases": [
+          "Albert Epic"
+        ],
+        "extensions": [
+          ".abepic"
+        ],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "albert-feature-json",
+        "aliases": [
+          "Albert Feature"
+        ],
+        "extensions": [
+          ".abfeat"
+        ],
+        "configuration": "./language-configuration.json"
       }
     ],
     "grammars": [
@@ -88,6 +108,16 @@
       },
       {
         "language": "albert-history-json",
+        "scopeName": "source.json",
+        "path": "./syntaxes/json.tmLanguage.json"
+      },
+      {
+        "language": "albert-epic-json",
+        "scopeName": "source.json",
+        "path": "./syntaxes/json.tmLanguage.json"
+      },
+      {
+        "language": "albert-feature-json",
         "scopeName": "source.json",
         "path": "./syntaxes/json.tmLanguage.json"
       }
@@ -164,6 +194,14 @@
       {
         "fileMatch": "*.abh",
         "url": "./schemas/history.schema.json"
+      },
+      {
+        "fileMatch": "*.abepic",
+        "url": "./schemas/epic.schema.json"
+      },
+      {
+        "fileMatch": "*.abfeat",
+        "url": "./schemas/feature.schema.json"
       }
     ],
     "commands": [
@@ -251,6 +289,31 @@
           "type": "string",
           "default": "",
           "description": "Path to a k6 executable to use for running flows and sims. Leave empty to let Albert download and cache a pinned k6 release automatically."
+        },
+        "albert.allure.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically send flow execution results to an Allure report server."
+        },
+        "albert.allure.serverUrl": {
+          "type": "string",
+          "default": "",
+          "description": "Endpoint URL of the Allure report server (e.g. http://localhost:5050)."
+        },
+        "albert.allure.projectId": {
+          "type": "string",
+          "default": "default",
+          "description": "Project ID in the Allure report server to send results under."
+        },
+        "albert.allure.username": {
+          "type": "string",
+          "default": "",
+          "description": "Username for Basic Authentication to the Allure report server (optional)."
+        },
+        "albert.allure.password": {
+          "type": "string",
+          "default": "",
+          "description": "Password for Basic Authentication to the Allure report server (optional)."
         }
       }
     }

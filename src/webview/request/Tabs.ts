@@ -21,7 +21,7 @@ import { renderResponseTab } from './ResponseTab';
 import { renderHistoryTab } from './HistoryTab';
 import { genId, store } from './state';
 
-type TabId = 'headers' | 'query' | 'body' | 'auth' | 'preview' | 'expect' | 'schema' | 'scripts' | 'sample' | 'response' | 'history';
+type TabId = 'headers' | 'query' | 'body' | 'auth' | 'preview' | 'expect' | 'schema' | 'scripts' | 'sample' | 'allure' | 'response' | 'history';
 
 let activeTab: TabId = 'headers';
 
@@ -88,7 +88,7 @@ export function renderTabs(container: HTMLElement): void {
   container.innerHTML = '';
 
   const tabBar = document.createElement('div');
-  tabBar.className = 'akrp-tabs';
+  tabBar.className = 'albert-tabs';
 
   const sections: { label: string; tabs: TabEntry[] }[] = [
     {
@@ -108,6 +108,7 @@ export function renderTabs(container: HTMLElement): void {
         { id: 'schema', label: 'Schema' },
         { id: 'scripts', label: 'Scripts' },
         { id: 'sample', label: 'Sample' },
+        { id: 'allure', label: 'Allure report config' },
         { id: 'response', label: 'Response' },
       ],
     },
@@ -121,17 +122,17 @@ export function renderTabs(container: HTMLElement): void {
 
   for (const section of sections) {
     const sectionLabel = document.createElement('div');
-    sectionLabel.className = 'akrp-tab-section';
+    sectionLabel.className = 'albert-tab-section';
     sectionLabel.textContent = section.label;
     tabBar.appendChild(sectionLabel);
 
     for (const tab of section.tabs) {
       const el = document.createElement('div');
-      el.className = 'akrp-tab' + (tab.id === activeTab ? ' active' : '');
+      el.className = 'albert-tab' + (tab.id === activeTab ? ' active' : '');
       el.textContent = tab.label;
       if (tabHasError(tab.id)) {
         const warn = document.createElement('span');
-        warn.className = 'akrp-tab-warning';
+        warn.className = 'albert-tab-warning';
         warn.textContent = '⚠';
         warn.title = 'This tab has a validation error';
         el.appendChild(warn);
@@ -189,6 +190,9 @@ export function renderTabs(container: HTMLElement): void {
     case 'sample':
       renderSampleTab(content);
       break;
+    case 'allure':
+      renderAllureConfigTab(content);
+      break;
     case 'response':
       renderResponseTab(container, content);
       break;
@@ -202,17 +206,22 @@ export function renderTabs(container: HTMLElement): void {
 
 
 function renderPreviewTab(container: HTMLElement): void {
+  const refreshRow = document.createElement('div');
+  refreshRow.style.display = 'flex';
+  refreshRow.style.justifyContent = 'flex-end';
+  refreshRow.style.marginBottom = '8px';
+
   const refreshBtn = document.createElement('button');
   refreshBtn.textContent = 'Refresh preview';
   refreshBtn.className = 'secondary';
-  refreshBtn.style.marginBottom = '8px';
   refreshBtn.onclick = () => store.requestPreview();
-  container.appendChild(refreshBtn);
+  refreshRow.appendChild(refreshBtn);
+  container.appendChild(refreshRow);
 
   if (!store.currentPreview) {
     store.requestPreview();
     const loading = document.createElement('div');
-    loading.className = 'akrp-empty';
+    loading.className = 'albert-empty';
     loading.textContent = 'Resolving variables…';
     container.appendChild(loading);
     return;
@@ -227,7 +236,7 @@ function renderBodyTab(container: HTMLElement): void {
   const body = store.file.request.body;
 
   const modeRow = document.createElement('div');
-  modeRow.className = 'akrp-kv-row';
+  modeRow.className = 'albert-kv-row';
   const select = document.createElement('select');
   const modes: BodyMode[] = ['none', 'json', 'text', 'form-urlencoded'];
   for (const mode of modes) {
@@ -249,19 +258,19 @@ function renderBodyTab(container: HTMLElement): void {
   const defaultContentType = DEFAULT_CONTENT_TYPE_BY_BODY_MODE[body.mode];
   if (defaultContentType && method !== 'GET' && method !== 'HEAD') {
     const hint = document.createElement('div');
-    hint.className = 'akrp-env-readout';
+    hint.className = 'albert-env-readout';
     hint.textContent = `Sent with Content-Type: ${defaultContentType} unless overridden in the Headers tab.`;
     container.appendChild(hint);
   } else if (defaultContentType) {
     const hint = document.createElement('div');
-    hint.className = 'akrp-env-readout';
+    hint.className = 'albert-env-readout';
     hint.textContent = `Body is not sent for ${method} requests, so no Content-Type default applies.`;
     container.appendChild(hint);
   }
 
   if (body.mode === 'json' || body.mode === 'text') {
     const editorContainer = document.createElement('div');
-    editorContainer.className = 'akrp-code-editor';
+    editorContainer.className = 'albert-code-editor';
     container.appendChild(editorContainer);
     const editor = createCodeEditor(
       editorContainer,
@@ -286,9 +295,9 @@ function renderBodyTab(container: HTMLElement): void {
               });
             }
           }
-          monacoNs.editor.setModelMarkers(model, 'akrp-json-body-lint', markers);
+          monacoNs.editor.setModelMarkers(model, 'albert-json-body-lint', markers);
         } catch (e) {
-          console.error('[akrp] json body lint error:', e);
+          console.error('[albert] json body lint error:', e);
         }
         store.scheduleDiagnostics();
       } : undefined,
@@ -298,15 +307,16 @@ function renderBodyTab(container: HTMLElement): void {
 
     if (body.mode === 'json') {
       const prettifyBtn = document.createElement('button');
-      prettifyBtn.textContent = 'Prettify';
+      prettifyBtn.textContent = 'Format';
       prettifyBtn.className = 'secondary';
+      prettifyBtn.style.marginLeft = 'auto';
       prettifyBtn.onclick = () => {
         try {
           const formatted = JSON.stringify(JSON.parse(store.file.request.body.content), null, 2);
           editor.setValue(formatted);
           store.mutateQuiet(() => { store.file.request.body.content = formatted; });
         } catch (e) {
-          console.error('[akrp] prettify failed:', e);
+          console.error('[albert] prettify failed:', e);
         }
       };
       modeRow.appendChild(prettifyBtn);
@@ -417,7 +427,7 @@ function renderExpectTab(container: HTMLElement): void {
 
   store.file.expectations.forEach((assertion, idx) => {
     const row = document.createElement('div');
-    row.className = 'akrp-kv-row';
+    row.className = 'albert-kv-row';
 
     const targetSelect = document.createElement('select');
     for (const t of targets) {
@@ -486,6 +496,7 @@ function renderExpectTab(container: HTMLElement): void {
   const addBtn = document.createElement('button');
   addBtn.textContent = '+ Add assertion';
   addBtn.className = 'secondary';
+  addBtn.style.marginRight = '8px';
   addBtn.onclick = () => {
     store.mutate(() => {
       const newAssertion: ExpectAssertion = {
@@ -506,7 +517,7 @@ function renderSchemaTab(container: HTMLElement): void {
   const schemaValidation = store.file.schemaValidation;
 
   const checkboxRow = document.createElement('div');
-  checkboxRow.className = 'akrp-checkbox-row';
+  checkboxRow.className = 'albert-checkbox-row';
   const checkbox = document.createElement('input');
   checkbox.type = 'checkbox';
   checkbox.checked = schemaValidation.enabled;
@@ -521,7 +532,7 @@ function renderSchemaTab(container: HTMLElement): void {
   container.appendChild(checkboxRow);
 
   const editorContainer = document.createElement('div');
-  editorContainer.className = 'akrp-code-editor';
+  editorContainer.className = 'albert-code-editor';
   container.appendChild(editorContainer);
 
   const editor = createCodeEditor(
@@ -536,7 +547,7 @@ function renderSchemaTab(container: HTMLElement): void {
   const formatSchemaBtn = document.createElement('button');
   formatSchemaBtn.textContent = 'Format';
   formatSchemaBtn.className = 'secondary';
-  formatSchemaBtn.style.marginLeft = '8px';
+  formatSchemaBtn.style.marginLeft = 'auto';
   formatSchemaBtn.onclick = () => {
     try {
       const formatted = JSON.stringify(JSON.parse(store.file.schemaValidation.schema), null, 2);
@@ -555,12 +566,12 @@ function renderScriptsTab(container: HTMLElement): void {
   preTitleRow.style.alignItems = 'center';
   preTitleRow.style.gap = '8px';
   const preTitle = document.createElement('div');
-  preTitle.className = 'akrp-section-title';
+  preTitle.className = 'albert-section-title';
   preTitle.textContent = 'Pre-request script';
   preTitleRow.appendChild(preTitle);
 
   const preContainer = document.createElement('div');
-  preContainer.className = 'akrp-code-editor';
+  preContainer.className = 'albert-code-editor';
   const preEditor = createCodeEditor(
     preContainer,
     'javascript',
@@ -571,7 +582,7 @@ function renderScriptsTab(container: HTMLElement): void {
         lintScript(monacoNs, model);
         lintScriptVariables(monacoNs, model, store.activeEnvVariableNames);
       } catch (e) {
-        console.error('[akrp] lint callback error:', e);
+        console.error('[albert] lint callback error:', e);
       }
       store.scheduleDiagnostics();
     },
@@ -582,6 +593,7 @@ function renderScriptsTab(container: HTMLElement): void {
   const formatPreBtn = document.createElement('button');
   formatPreBtn.textContent = 'Format';
   formatPreBtn.className = 'secondary';
+  formatPreBtn.style.marginLeft = 'auto';
   formatPreBtn.onclick = () => {
     const action = preEditor.getAction('editor.action.formatDocument');
     if (action) { action.run(); }
@@ -596,12 +608,12 @@ function renderScriptsTab(container: HTMLElement): void {
   postTitleRow.style.alignItems = 'center';
   postTitleRow.style.gap = '8px';
   const postTitle = document.createElement('div');
-  postTitle.className = 'akrp-section-title';
+  postTitle.className = 'albert-section-title';
   postTitle.textContent = 'Post-response script';
   postTitleRow.appendChild(postTitle);
 
   const postContainer = document.createElement('div');
-  postContainer.className = 'akrp-code-editor';
+  postContainer.className = 'albert-code-editor';
   const postEditor = createCodeEditor(
     postContainer,
     'javascript',
@@ -612,7 +624,7 @@ function renderScriptsTab(container: HTMLElement): void {
         lintScript(monacoNs, model);
         lintScriptVariables(monacoNs, model, store.activeEnvVariableNames);
       } catch (e) {
-        console.error('[akrp] lint callback error:', e);
+        console.error('[albert] lint callback error:', e);
       }
       store.scheduleDiagnostics();
     },
@@ -623,6 +635,7 @@ function renderScriptsTab(container: HTMLElement): void {
   const formatPostBtn = document.createElement('button');
   formatPostBtn.textContent = 'Format';
   formatPostBtn.className = 'secondary';
+  formatPostBtn.style.marginLeft = 'auto';
   formatPostBtn.onclick = () => {
     const action = postEditor.getAction('editor.action.formatDocument');
     if (action) { action.run(); }
@@ -641,12 +654,12 @@ function renderSampleTab(container: HTMLElement): void {
   sampleTitleRow.style.alignItems = 'center';
   sampleTitleRow.style.gap = '8px';
   const sampleTitle = document.createElement('div');
-  sampleTitle.className = 'akrp-section-title';
+  sampleTitle.className = 'albert-section-title';
   sampleTitle.textContent = 'Sample response (for developing tests without a live call)';
   sampleTitleRow.appendChild(sampleTitle);
 
   const sampleContainer = document.createElement('div');
-  sampleContainer.className = 'akrp-code-editor';
+  sampleContainer.className = 'albert-code-editor';
   const sampleEditor = createCodeEditor(sampleContainer, 'json', store.file.sampleResponse, (value) =>
     store.mutateQuiet(() => (store.file.sampleResponse = value)), undefined, 'sampleResponse'
   );
@@ -655,6 +668,7 @@ function renderSampleTab(container: HTMLElement): void {
   const formatSampleBtn = document.createElement('button');
   formatSampleBtn.textContent = 'Format';
   formatSampleBtn.className = 'secondary';
+  formatSampleBtn.style.marginLeft = 'auto';
   formatSampleBtn.onclick = () => {
     try {
       const formatted = JSON.stringify(JSON.parse(store.file.sampleResponse), null, 2);
@@ -687,7 +701,7 @@ function appendRunAgainstSample(container: HTMLElement): void {
 
 function textField(label: string, value: string, onInput: (value: string) => void): HTMLElement {
   const wrapper = document.createElement('div');
-  wrapper.className = 'akrp-kv-row';
+  wrapper.className = 'albert-kv-row';
   const labelEl = document.createElement('span');
   labelEl.textContent = label;
   labelEl.style.width = '80px';
@@ -703,4 +717,215 @@ function textField(label: string, value: string, onInput: (value: string) => voi
   attachVariableSuggestions(input, () => store.activeEnvVariableNames);
   wrapper.append(labelEl, input);
   return wrapper;
+}
+
+function renderAllureConfigTab(container: HTMLElement): void {
+  const allure = store.file.allureReportConfig || {
+    description: '',
+    severity: 'normal',
+    feature: '',
+    story: '',
+    suite: '',
+    owner: '',
+    tags: [],
+  };
+
+  const title = document.createElement('div');
+  title.className = 'albert-section-title';
+  title.textContent = 'Allure Report Metadata';
+  container.appendChild(title);
+
+  // Description
+  const descGroup = document.createElement('div');
+  descGroup.className = 'albert-kv-row';
+  descGroup.style.alignItems = 'flex-start';
+  const descLabel = document.createElement('span');
+  descLabel.textContent = 'Description';
+  descLabel.style.width = '100px';
+  descLabel.style.flexShrink = '0';
+  descLabel.style.marginTop = '6px';
+  const descInput = document.createElement('textarea');
+  descInput.className = 'albert-body';
+  descInput.style.minHeight = '60px';
+  descInput.value = allure.description || '';
+  descInput.oninput = () => store.mutateQuiet(() => (allure.description = descInput.value));
+  descGroup.append(descLabel, descInput);
+  container.appendChild(descGroup);
+
+  // Severity
+  const sevGroup = document.createElement('div');
+  sevGroup.className = 'albert-kv-row';
+  const sevLabel = document.createElement('span');
+  sevLabel.textContent = 'Severity';
+  sevLabel.style.width = '100px';
+  sevLabel.style.flexShrink = '0';
+  const sevSelect = document.createElement('select');
+  const severities = ['blocker', 'critical', 'normal', 'minor', 'trivial'];
+  for (const s of severities) {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = s;
+    if (s === allure.severity) opt.selected = true;
+    sevSelect.appendChild(opt);
+  }
+  sevSelect.onchange = () => store.mutate(() => (allure.severity = sevSelect.value as any));
+  sevGroup.append(sevLabel, sevSelect);
+  container.appendChild(sevGroup);
+
+  // --- Epic File ---
+  const epicGroup = document.createElement('div');
+  epicGroup.className = 'albert-kv-row';
+  const epicLabel = document.createElement('span');
+  epicLabel.textContent = 'Epic File';
+  epicLabel.style.width = '100px';
+  epicLabel.style.flexShrink = '0';
+  const epicValContainer = document.createElement('div');
+  epicValContainer.style.display = 'flex';
+  epicValContainer.style.alignItems = 'center';
+  epicValContainer.style.gap = '8px';
+  epicValContainer.style.flex = '1';
+
+  const epicPathSpan = document.createElement('span');
+  epicPathSpan.style.fontSize = '12px';
+  epicPathSpan.style.color = allure.epicPath ? 'var(--vscode-foreground)' : 'var(--albert-muted, #808080)';
+  epicPathSpan.textContent = allure.epicPath || 'None selected';
+  epicPathSpan.style.flex = '1';
+  epicPathSpan.style.overflow = 'hidden';
+  epicPathSpan.style.textOverflow = 'ellipsis';
+  epicPathSpan.style.whiteSpace = 'nowrap';
+
+  const epicPickBtn = document.createElement('button');
+  epicPickBtn.className = 'secondary';
+  epicPickBtn.style.padding = '2px 8px';
+  epicPickBtn.style.fontSize = '11px';
+  epicPickBtn.style.height = '24px';
+  epicPickBtn.textContent = 'Pick Epic...';
+  epicPickBtn.onclick = () => store.pickEpic();
+
+  epicValContainer.append(epicPathSpan, epicPickBtn);
+  epicGroup.append(epicLabel, epicValContainer);
+  container.appendChild(epicGroup);
+
+  // --- Feature File ---
+  const featGroup = document.createElement('div');
+  featGroup.className = 'albert-kv-row';
+  const featLabel = document.createElement('span');
+  featLabel.textContent = 'Feature';
+  featLabel.style.width = '100px';
+  featLabel.style.flexShrink = '0';
+  const featValContainer = document.createElement('div');
+  featValContainer.style.display = 'flex';
+  featValContainer.style.alignItems = 'center';
+  featValContainer.style.gap = '8px';
+  featValContainer.style.flex = '1';
+
+  const featPathSpan = document.createElement('span');
+  featPathSpan.style.fontSize = '12px';
+  featPathSpan.style.color = allure.featurePath ? 'var(--vscode-foreground)' : 'var(--albert-muted, #808080)';
+  featPathSpan.textContent = allure.featurePath ? `${allure.feature || ''} (${allure.featurePath})` : 'None selected';
+  featPathSpan.style.flex = '1';
+  featPathSpan.style.overflow = 'hidden';
+  featPathSpan.style.textOverflow = 'ellipsis';
+  featPathSpan.style.whiteSpace = 'nowrap';
+
+  const featPickBtn = document.createElement('button');
+  featPickBtn.className = 'secondary';
+  featPickBtn.style.padding = '2px 8px';
+  featPickBtn.style.fontSize = '11px';
+  featPickBtn.style.height = '24px';
+  featPickBtn.textContent = 'Pick Feature...';
+  if (!allure.epicPath) {
+    featPickBtn.disabled = true;
+    featPickBtn.title = 'Please pick an Epic file first';
+  }
+  featPickBtn.onclick = () => {
+    if (allure.epicPath) store.pickFeature(allure.epicPath);
+  };
+
+  featValContainer.append(featPathSpan, featPickBtn);
+  featGroup.append(featLabel, featValContainer);
+  container.appendChild(featGroup);
+
+  // --- Story ---
+  const storyGroup = document.createElement('div');
+  storyGroup.className = 'albert-kv-row';
+  const storyLabel = document.createElement('span');
+  storyLabel.textContent = 'Story';
+  storyLabel.style.width = '100px';
+  storyLabel.style.flexShrink = '0';
+
+  const storySelect = document.createElement('select');
+  storySelect.style.flex = '1';
+  if (!allure.featurePath) {
+    storySelect.disabled = true;
+  }
+  const stories = [...store.availableStories];
+  if (allure.story && !stories.includes(allure.story)) {
+    stories.unshift(allure.story);
+  }
+  if (stories.length === 0) {
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = allure.featurePath ? 'No stories found in feature file' : 'Please pick a Feature file first';
+    storySelect.appendChild(opt);
+  } else {
+    for (const story of stories) {
+      const opt = document.createElement('option');
+      opt.value = story;
+      opt.textContent = story;
+      if (story === allure.story) opt.selected = true;
+      storySelect.appendChild(opt);
+    }
+  }
+  storySelect.onchange = () => {
+    store.mutate(() => {
+      allure.story = storySelect.value;
+    });
+  };
+  storyGroup.append(storyLabel, storySelect);
+  container.appendChild(storyGroup);
+
+  // Suite
+  container.appendChild(
+    allureField('Suite', allure.suite || '', (v) => (allure.suite = v))
+  );
+
+  // Owner
+  container.appendChild(
+    allureField('Owner', allure.owner || '', (v) => (allure.owner = v))
+  );
+
+  // Tags
+  const tagsGroup = document.createElement('div');
+  tagsGroup.className = 'albert-kv-row';
+  const tagsLabel = document.createElement('span');
+  tagsLabel.textContent = 'Tags';
+  tagsLabel.style.width = '100px';
+  tagsLabel.style.flexShrink = '0';
+  const tagsInput = document.createElement('input');
+  tagsInput.type = 'text';
+  tagsInput.placeholder = 'e.g. smoke, critical, billing';
+  tagsInput.value = (allure.tags || []).join(', ');
+  tagsInput.oninput = () => store.mutateQuiet(() => {
+    allure.tags = tagsInput.value.split(',').map((s) => s.trim()).filter(Boolean);
+  });
+  tagsGroup.append(tagsLabel, tagsInput);
+  container.appendChild(tagsGroup);
+
+  appendRunAgainstSample(container);
+}
+
+function allureField(label: string, value: string, onChange: (val: string) => void): HTMLElement {
+  const row = document.createElement('div');
+  row.className = 'albert-kv-row';
+  const labelEl = document.createElement('span');
+  labelEl.textContent = label;
+  labelEl.style.width = '100px';
+  labelEl.style.flexShrink = '0';
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = value;
+  input.oninput = () => store.mutateQuiet(() => onChange(input.value));
+  row.append(labelEl, input);
+  return row;
 }
