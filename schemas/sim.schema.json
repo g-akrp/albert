@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Albert Simulation",
+  "type": "object",
+  "required": ["akrpType", "akrpVersion", "name", "profile", "flows"],
+  "additionalProperties": false,
+  "properties": {
+    "akrpType": { "const": "sim" },
+    "akrpVersion": { "const": 1 },
+    "name": { "type": "string" },
+    "profile": {
+      "type": "object",
+      "required": ["type", "durationSec"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "enum": ["constant", "load", "stress", "spike", "soak"] },
+        "durationSec": { "type": "number" },
+        "rampUpSec": { "type": "number" }
+      }
+    },
+    "flows": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/simFlowEntry" }
+    },
+    "apm": { "$ref": "#/definitions/apmConfig" }
+  },
+  "definitions": {
+    "simFlowEntry": {
+      "type": "object",
+      "required": ["id", "flowPath", "targetTps", "enabled"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "flowPath": { "type": "string" },
+        "targetTps": { "type": "number" },
+        "enabled": { "type": "boolean" }
+      }
+    },
+    "apmConfig": {
+      "type": "object",
+      "required": ["provider", "region"],
+      "additionalProperties": false,
+      "properties": {
+        "provider": { "enum": ["newrelic"] },
+        "region": { "enum": ["US", "EU"] }
+      }
+    }
+  }
+}

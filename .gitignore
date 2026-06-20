@@ -1,0 +1,10 @@
+out/
+node_modules/
+.albert_built/
+.vscode-test/
+.cocoindex_code/
+.vscode/
+.claude/
+opencode.json
+example/
+STATUS.md

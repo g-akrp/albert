@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Albert Environment Config",
+  "type": "object",
+  "required": ["akrpType", "akrpVersion", "name", "variables", "settings"],
+  "additionalProperties": false,
+  "properties": {
+    "akrpType": { "const": "env_config" },
+    "akrpVersion": { "const": 1 },
+    "name": { "type": "string" },
+    "variables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "value", "enabled"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "value": { "type": "string" },
+          "enabled": { "type": "boolean" }
+        }
+      }
+    },
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "timeoutMs": { "type": "number" },
+        "followRedirects": { "type": "boolean" }
+      }
+    }
+  }
+}

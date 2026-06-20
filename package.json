@@ -1,0 +1,284 @@
+{
+  "name": "albert",
+  "displayName": "Albert",
+  "description": "API request files (.abrq) and environment configs (.abenv) with scripting, assertions, and AJV schema validation.",
+  "version": "0.3.0",
+  "publisher": "g-akrp",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [],
+  "contributes": {
+    "languages": [
+      {
+        "id": "albert-request-json",
+        "aliases": [
+          "Albert Request"
+        ],
+        "extensions": [
+          ".abrq"
+        ],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "albert-env-config-json",
+        "aliases": [
+          "Albert Environment Config"
+        ],
+        "extensions": [
+          ".abenv"
+        ],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "albert-flow-json",
+        "aliases": [
+          "Albert Flow"
+        ],
+        "extensions": [
+          ".abf"
+        ],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "albert-sim-json",
+        "aliases": [
+          "Albert Simulation"
+        ],
+        "extensions": [
+          ".abl"
+        ],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "albert-history-json",
+        "aliases": [
+          "Albert Flow Run History"
+        ],
+        "extensions": [
+          ".abh"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "albert-request-json",
+        "scopeName": "source.json",
+        "path": "./syntaxes/json.tmLanguage.json"
+      },
+      {
+        "language": "albert-env-config-json",
+        "scopeName": "source.json",
+        "path": "./syntaxes/json.tmLanguage.json"
+      },
+      {
+        "language": "albert-flow-json",
+        "scopeName": "source.json",
+        "path": "./syntaxes/json.tmLanguage.json"
+      },
+      {
+        "language": "albert-sim-json",
+        "scopeName": "source.json",
+        "path": "./syntaxes/json.tmLanguage.json"
+      },
+      {
+        "language": "albert-history-json",
+        "scopeName": "source.json",
+        "path": "./syntaxes/json.tmLanguage.json"
+      }
+    ],
+    "customEditors": [
+      {
+        "viewType": "albert.requestEditor",
+        "displayName": "Albert Request Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.abrq"
+          }
+        ],
+        "priority": "default"
+      },
+      {
+        "viewType": "albert.envConfigEditor",
+        "displayName": "Albert Environment Config Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.abenv"
+          }
+        ],
+        "priority": "default"
+      },
+      {
+        "viewType": "albert.flowEditor",
+        "displayName": "Albert Flow Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.abf"
+          }
+        ],
+        "priority": "default"
+      },
+      {
+        "viewType": "albert.simEditor",
+        "displayName": "Albert Sim Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.abl"
+          }
+        ],
+        "priority": "default"
+      },
+      {
+        "viewType": "albert.historyViewer",
+        "displayName": "Albert Flow Run History Viewer",
+        "selector": [
+          {
+            "filenamePattern": "*.abh"
+          }
+        ],
+        "priority": "default"
+      }
+    ],
+    "jsonValidation": [
+      {
+        "fileMatch": "*.abrq",
+        "url": "./schemas/request.schema.json"
+      },
+      {
+        "fileMatch": "*.abenv",
+        "url": "./schemas/envConfig.schema.json"
+      },
+      {
+        "fileMatch": "*.abf",
+        "url": "./schemas/flow.schema.json"
+      },
+      {
+        "fileMatch": "*.abl",
+        "url": "./schemas/sim.schema.json"
+      },
+      {
+        "fileMatch": "*.abh",
+        "url": "./schemas/history.schema.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "albert.newRequestFile",
+        "title": "Albert: New API Request File",
+        "category": "Albert"
+      },
+      {
+        "command": "albert.newEnvConfigFile",
+        "title": "Albert: New Environment Config",
+        "category": "Albert"
+      },
+      {
+        "command": "albert.newFlowFile",
+        "title": "Albert: New API Flow",
+        "category": "Albert"
+      },
+      {
+        "command": "albert.newSimFile",
+        "title": "Albert: New Load Simulation",
+        "category": "Albert"
+      },
+      {
+        "command": "albert.selectActiveEnvironment",
+        "title": "Albert: Select Active Environment",
+        "category": "Albert"
+      },
+      {
+        "command": "albert.setNewRelicKey",
+        "title": "Albert: Set New Relic API Key",
+        "category": "Albert"
+      },
+      {
+        "command": "albert.installCli",
+        "title": "Albert: Install CLI",
+        "category": "Albert"
+      },
+      {
+        "command": "albert.uninstallCli",
+        "title": "Albert: Uninstall CLI",
+        "category": "Albert"
+      },
+      {
+        "command": "albert.openAsText",
+        "title": "Albert: Open File as Text",
+        "category": "Albert"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "albert.newRequestFile",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation"
+        },
+        {
+          "command": "albert.newEnvConfigFile",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation"
+        },
+        {
+          "command": "albert.newFlowFile",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation"
+        },
+        {
+          "command": "albert.newSimFile",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "albert.openAsText",
+          "when": "resourceExtname == .abrq || resourceExtname == .abenv || resourceExtname == .abf || resourceExtname == .abl || resourceExtname == .abh",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Albert",
+      "properties": {
+        "albert.k6Path": {
+          "type": "string",
+          "default": "",
+          "description": "Path to a k6 executable to use for running flows and sims. Leave empty to let Albert download and cache a pinned k6 release automatically."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "package": "node esbuild.js --production",
+    "vscode:prepublish": "npm run package",
+    "typecheck": "tsc --noEmit -p ./",
+    "pretest": "npm run compile && npm run typecheck",
+    "vsix": "npm run package && vsce package --out .albert_built/vsix/",
+    "cli": "node out/cli.js"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "expect": "^29.7.0",
+    "jsonc-parser": "^3.3.1",
+    "monaco-editor": "^0.50.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^2.27.0",
+    "esbuild": "^0.21.0",
+    "typescript": "^5.5.0"
+  },
+  "bin": {
+    "albert": "./out/cli.js"
+  }
+}

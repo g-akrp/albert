@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Albert Flow",
+  "type": "object",
+  "required": ["akrpType", "akrpVersion", "name", "steps"],
+  "additionalProperties": false,
+  "properties": {
+    "akrpType": { "const": "flow" },
+    "akrpVersion": { "const": 1 },
+    "name": { "type": "string" },
+    "steps": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/flowStep" }
+    }
+  },
+  "definitions": {
+    "flowStep": {
+      "type": "object",
+      "required": ["id", "name", "requestPath", "enabled", "validate", "captures"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "requestPath": { "type": "string" },
+        "enabled": { "type": "boolean" },
+        "validate": { "type": "boolean" },
+        "captures": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/flowCapture" }
+        }
+      }
+    },
+    "flowCapture": {
+      "type": "object",
+      "required": ["variable", "source"],
+      "additionalProperties": false,
+      "properties": {
+        "variable": { "type": "string" },
+        "source": { "enum": ["body", "header", "status"] },
+        "path": { "type": "string" }
+      }
+    }
+  }
+}

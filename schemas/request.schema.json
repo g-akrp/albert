@@ -1,0 +1,125 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Albert Request",
+  "type": "object",
+  "required": ["akrpType", "akrpVersion", "name", "request", "scripts", "expectations", "schemaValidation", "sampleResponse"],
+  "additionalProperties": false,
+  "properties": {
+    "akrpType": { "const": "request" },
+    "akrpVersion": { "const": 1 },
+    "name": { "type": "string" },
+    "request": { "$ref": "#/definitions/requestDetails" },
+    "scripts": {
+      "type": "object",
+      "required": ["preRequest", "postResponse"],
+      "additionalProperties": false,
+      "properties": {
+        "preRequest": { "type": "string" },
+        "postResponse": { "type": "string" }
+      }
+    },
+    "expectations": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/expectAssertion" }
+    },
+    "schemaValidation": {
+      "type": "object",
+      "required": ["enabled", "schema"],
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "schema": { "type": "string" }
+      }
+    },
+    "sampleResponse": { "type": "string" }
+  },
+  "definitions": {
+    "keyValueEntry": {
+      "type": "object",
+      "required": ["name", "value", "enabled"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "value": { "type": "string" },
+        "enabled": { "type": "boolean" }
+      }
+    },
+    "queryEntry": {
+      "type": "object",
+      "required": ["key", "format", "value", "enabled"],
+      "additionalProperties": false,
+      "properties": {
+        "key": { "type": "string" },
+        "format": { "enum": ["string", "number", "boolean", "json"] },
+        "value": { "type": "string" },
+        "enabled": { "type": "boolean" }
+      }
+    },
+    "requestDetails": {
+      "type": "object",
+      "required": ["method", "endpoint", "path", "headers", "query", "body", "auth"],
+      "additionalProperties": false,
+      "properties": {
+        "method": { "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"] },
+        "endpoint": { "type": "string" },
+        "path": { "type": "string" },
+        "headers": { "type": "array", "items": { "$ref": "#/definitions/keyValueEntry" } },
+        "query": { "type": "array", "items": { "$ref": "#/definitions/queryEntry" } },
+        "body": { "$ref": "#/definitions/requestBody" },
+        "auth": { "$ref": "#/definitions/authConfig" }
+      }
+    },
+    "requestBody": {
+      "type": "object",
+      "required": ["mode", "content"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": { "enum": ["none", "json", "text", "form-urlencoded"] },
+        "content": { "type": "string" },
+        "formData": { "type": "array", "items": { "$ref": "#/definitions/keyValueEntry" } }
+      }
+    },
+    "authConfig": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "enum": ["none", "basic", "bearer", "api-key"] },
+        "basic": {
+          "type": "object",
+          "required": ["username", "password"],
+          "additionalProperties": false,
+          "properties": { "username": { "type": "string" }, "password": { "type": "string" } }
+        },
+        "bearer": {
+          "type": "object",
+          "required": ["token"],
+          "additionalProperties": false,
+          "properties": { "token": { "type": "string" } }
+        },
+        "apiKey": {
+          "type": "object",
+          "required": ["key", "value", "in"],
+          "additionalProperties": false,
+          "properties": {
+            "key": { "type": "string" },
+            "value": { "type": "string" },
+            "in": { "enum": ["header", "query"] }
+          }
+        }
+      }
+    },
+    "expectAssertion": {
+      "type": "object",
+      "required": ["id", "target", "operator", "expected"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "target": { "enum": ["status", "header", "body"] },
+        "path": { "type": "string" },
+        "operator": { "enum": ["equals", "notEquals", "contains", "exists", "matches", "greaterThan", "lessThan"] },
+        "expected": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "scopeName": "source.json",
+  "name": "JSON",
+  "fileTypes": ["abrq", "abenv", "abf", "abl", "abh"],
+  "patterns": [{ "include": "#value" }],
+  "repository": {
+    "value": {
+      "patterns": [
+        { "include": "#constant" },
+        { "include": "#number" },
+        { "include": "#string" },
+        { "include": "#array" },
+        { "include": "#object" }
+      ]
+    },
+    "constant": {
+      "match": "\\b(true|false|null)\\b",
+      "name": "constant.language.json"
+    },
+    "number": {
+      "match": "-?\\d+(\\.\\d+)?([eE][+-]?\\d+)?",
+      "name": "constant.numeric.json"
+    },
+    "string": {
+      "begin": "\"",
+      "end": "\"",
+      "name": "string.quoted.double.json",
+      "patterns": [
+        {
+          "match": "\\\\(\"|\\\\|/|b|f|n|r|t|u[0-9a-fA-F]{4})",
+          "name": "constant.character.escape.json"
+        }
+      ]
+    },
+    "array": {
+      "begin": "\\[",
+      "end": "\\]",
+      "name": "meta.structure.array.json",
+      "patterns": [{ "include": "#value" }, { "match": "," }]
+    },
+    "object": {
+      "begin": "\\{",
+      "end": "\\}",
+      "name": "meta.structure.dictionary.json",
+      "patterns": [
+        {
+          "match": "\"(?:\\\\.|[^\"\\\\])*\"\\s*(?=:)",
+          "name": "support.type.property-name.json"
+        },
+        { "include": "#value" },
+        { "match": "[,:]" }
+      ]
+    }
+  }
+}

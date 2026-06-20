@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Albert Flow Run History",
+  "type": "object",
+  "required": ["akrpType", "akrpVersion", "name", "kind", "flowRuns"],
+  "additionalProperties": false,
+  "properties": {
+    "akrpType": { "const": "history" },
+    "akrpVersion": { "const": 1 },
+    "name": { "type": "string" },
+    "kind": { "const": "flow" },
+    "flowRuns": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/flowRunHistoryEntry" }
+    }
+  },
+  "definitions": {
+    "flowRunHistoryEntry": {
+      "type": "object",
+      "required": ["id", "timestamp", "flowName", "result"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "timestamp": { "type": "number" },
+        "flowName": { "type": "string" },
+        "result": { "$ref": "#/definitions/flowRunResult" }
+      }
+    },
+    "flowRunResult": {
+      "type": "object",
+      "required": ["ok", "steps"],
+      "additionalProperties": false,
+      "properties": {
+        "ok": { "type": "boolean" },
+        "steps": { "type": "array", "items": { "$ref": "#/definitions/flowStepResult" } },
+        "summary": { "type": "string" },
+        "error": { "type": "string" }
+      }
+    },
+    "flowStepResult": {
+      "type": "object",
+      "required": ["stepId", "name", "method", "url", "status", "durationMs", "checks", "bodyPreview"],
+      "additionalProperties": false,
+      "properties": {
+        "stepId": { "type": "string" },
+        "name": { "type": "string" },
+        "method": { "type": "string" },
+        "url": { "type": "string" },
+        "status": { "type": "number" },
+        "durationMs": { "type": "number" },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["description", "pass"],
+            "additionalProperties": false,
+            "properties": {
+              "description": { "type": "string" },
+              "pass": { "type": "boolean" }
+            }
+          }
+        },
+        "bodyPreview": { "type": "string" },
+        "error": { "type": "string" }
+      }
+    }
+  }
+}
