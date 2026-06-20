@@ -198,6 +198,7 @@ export interface FlowStepResult {
   requestHeaders?: Record<string, string>;
   requestBody?: string;
   responseHeaders?: Record<string, string>;
+  auth?: AuthConfig;
 }
 
 export interface FlowRunResult {
@@ -422,9 +423,10 @@ export type EnvWebviewToHostMessage = { type: 'ready' } | { type: 'edit'; file: 
 // --- Webview <-> extension host message protocol: flow editor ---
 
 export type FlowHostToWebviewMessage =
-  | { type: 'init'; file: FlowFile; fileUri: string; activeEnvName: string | null }
+  | { type: 'init'; file: FlowFile; fileUri: string; activeEnvName: string | null; allureEnabled: boolean }
   | { type: 'documentChanged'; file: FlowFile }
   | { type: 'activeEnvironmentChanged'; activeEnvName: string | null }
+  | { type: 'allureEnabledChanged'; allureEnabled: boolean }
   | { type: 'requestPicked'; stepId: string; requestPath: string }
   | { type: 'flowStarted' }
   | { type: 'flowStep'; result: FlowStepResult }

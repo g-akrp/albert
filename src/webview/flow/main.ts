@@ -24,12 +24,16 @@ onHostMessage<FlowHostToWebviewMessage>((message) => {
       store.setFile(message.file);
       store.fileUri = message.fileUri;
       store.setActiveEnvName(message.activeEnvName);
+      store.setAllureEnabled(message.allureEnabled);
       break;
     case 'documentChanged':
       store.setFile(message.file);
       break;
     case 'activeEnvironmentChanged':
       store.setActiveEnvName(message.activeEnvName);
+      break;
+    case 'allureEnabledChanged':
+      store.setAllureEnabled(message.allureEnabled);
       break;
     case 'requestPicked':
       store.setRequestPath(message.stepId, message.requestPath);
@@ -63,6 +67,12 @@ function injectFlowStyles(): void {
     .flow-name-input:hover { border-color: var(--albert-border-subtle); background: var(--vscode-input-background); }
     .flow-name-input:focus { border-color: var(--vscode-focusBorder); background: var(--vscode-input-background); outline: none; }
     .albert-env-readout { font-size: 11px; font-weight: 500; text-transform: uppercase; color: var(--albert-muted); letter-spacing: 0.5px; }
+    .albert-allure-status { font-size: 11px; font-weight: 500; letter-spacing: 0.3px; padding: 2px 8px; border-radius: 10px; display: inline-flex; align-items: center; gap: 5px; }
+    .albert-allure-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+    .albert-allure-status.on { color: var(--albert-ok); background: color-mix(in srgb, var(--albert-ok) 12%, transparent); border: 1px solid color-mix(in srgb, var(--albert-ok) 30%, transparent); }
+    .albert-allure-status.on::before { background: var(--albert-ok); }
+    .albert-allure-status.off { color: var(--albert-muted); background: color-mix(in srgb, var(--albert-muted) 10%, transparent); border: 1px solid var(--albert-border); }
+    .albert-allure-status.off::before { background: var(--albert-muted); }
     .albert-flow-toolbar { display: flex; gap: 8px; }
 
     /* Dashboard Stats Box */
@@ -182,6 +192,12 @@ function injectFlowStyles(): void {
     /* History & General Styles */
     .albert-flow-history-section { border-top: 1px solid var(--albert-border); padding-top: 12px; margin-top: 12px; }
     .history-items-list { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+    .albert-flow-history-item { border: 1px solid var(--albert-border); border-radius: var(--albert-radius); margin-bottom: 6px; overflow: hidden; }
+    .albert-flow-history-summary { display: flex; align-items: center; gap: 8px; padding: 8px 10px; cursor: pointer; font-size: 12px; }
+    .albert-flow-history-summary:hover { background: var(--vscode-list-hoverBackground); }
+    .albert-flow-history-summary .ok { color: var(--albert-ok); }
+    .albert-flow-history-summary .err { color: var(--albert-err); }
+    .albert-flow-history-item > div:not(.albert-flow-history-summary) { padding: 0 10px 10px; }
     .del-btn:hover { color: var(--albert-err) !important; border-color: var(--albert-err) !important; }
     
     @keyframes spin {

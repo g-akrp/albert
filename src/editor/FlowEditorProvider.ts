@@ -61,10 +61,17 @@ export class FlowEditorProvider implements vscode.CustomTextEditorProvider {
       postToWebview({ type: 'activeEnvironmentChanged', activeEnvName: this.activeEnvironment.getActiveName() });
     });
 
+    const configSub = vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration('albert.allure.enabled')) {
+        postToWebview({ type: 'allureEnabledChanged', allureEnabled: isAllureEnabled() });
+      }
+    });
+
     webviewPanel.onDidDispose(() => {
       activeRun?.stop();
       changeSub.dispose();
       envSub.dispose();
+      configSub.dispose();
       this.selfAppliedText.delete(docKey);
     });
 
@@ -78,6 +85,7 @@ export class FlowEditorProvider implements vscode.CustomTextEditorProvider {
               file: parsed,
               fileUri: document.uri.toString(),
               activeEnvName: this.activeEnvironment.getActiveName(),
+              allureEnabled: isAllureEnabled(),
             });
           } else {
             postToWebview({ type: 'error', message: 'Document contains invalid Albert flow JSON.' });
@@ -293,6 +301,10 @@ export class FlowEditorProvider implements vscode.CustomTextEditorProvider {
 </body>
 </html>`;
   }
+}
+
+function isAllureEnabled(): boolean {
+  return vscode.workspace.getConfiguration('albert').get<boolean>('allure.enabled', false);
 }
 
 function toRelative(fromDir: string, target: string): string {

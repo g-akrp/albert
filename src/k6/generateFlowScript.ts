@@ -96,6 +96,7 @@ function generateStepBlock(rs: ResolvedFlowStep, variables: KeyValueEntry[], emi
         requestHeaders: headers,
         requestBody: body !== null ? String(body) : '',
         responseHeaders: resHeaders,
+        auth: ${JSON.stringify(rs.request.auth || null)},
       });
     } catch (e) {
       console.log('Failed to emit step results: ' + String(e));

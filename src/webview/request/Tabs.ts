@@ -735,6 +735,12 @@ function renderAllureConfigTab(container: HTMLElement): void {
   title.textContent = 'Allure Report Metadata';
   container.appendChild(title);
 
+  const note = document.createElement('div');
+  note.className = 'albert-allure-note';
+  note.innerHTML =
+    '⚠ Reports are only sent when <strong>Albert: Allure Enabled</strong> is turned on in VS Code settings <em>and</em> the request is executed as part of a <strong>Flow</strong> (not via the Send button).';
+  container.appendChild(note);
+
   // Description
   const descGroup = document.createElement('div');
   descGroup.className = 'albert-kv-row';

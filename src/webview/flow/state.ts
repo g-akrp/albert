@@ -18,6 +18,7 @@ class FlowStore {
   file: FlowFile = createEmptyFlowFile('');
   fileUri = '';
   activeEnvName: string | null = null;
+  allureEnabled = false;
   running = false;
   stepResults: FlowStepResult[] = [];
   lastRun: FlowRunResult | null = null;
@@ -61,6 +62,11 @@ class FlowStore {
 
   setActiveEnvName(name: string | null): void {
     this.activeEnvName = name;
+    this.notify();
+  }
+
+  setAllureEnabled(enabled: boolean): void {
+    this.allureEnabled = enabled;
     this.notify();
   }
 

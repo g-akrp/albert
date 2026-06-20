@@ -138,6 +138,7 @@ export function injectStyles(): void {
 
     /* ---- Generic rows / sections --------------------------------------- */
     .albert-section-title { font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--albert-muted); margin: 14px 0 6px; }
+    .albert-allure-note { font-size: 11px; color: var(--vscode-editorWarning-foreground, #cca700); background: color-mix(in srgb, var(--vscode-editorWarning-foreground, #cca700) 10%, transparent); border: 1px solid color-mix(in srgb, var(--vscode-editorWarning-foreground, #cca700) 30%, transparent); border-radius: var(--albert-radius-sm, 4px); padding: 6px 10px; margin-bottom: 10px; line-height: 1.5; }
     .albert-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
     .albert-row label { width: 130px; flex-shrink: 0; color: var(--albert-muted); }
     .albert-checkbox-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }

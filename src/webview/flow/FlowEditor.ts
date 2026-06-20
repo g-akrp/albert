@@ -140,6 +140,14 @@ function renderHeader(): HTMLElement {
   env.textContent = `Env: ${store.activeEnvName ?? 'none'}`;
   titleWrap.appendChild(env);
 
+  const allureStatus = document.createElement('div');
+  allureStatus.className = `albert-allure-status ${store.allureEnabled ? 'on' : 'off'}`;
+  allureStatus.title = store.allureEnabled
+    ? 'Allure reporting is enabled (Albert: Allure Enabled setting)'
+    : 'Allure reporting is disabled — enable "Albert: Allure Enabled" in VS Code settings to send reports';
+  allureStatus.textContent = `Allure: ${store.allureEnabled ? 'Enabled' : 'Disabled'}`;
+  titleWrap.appendChild(allureStatus);
+
   header.appendChild(titleWrap);
 
   const bar = document.createElement('div');
@@ -792,6 +800,7 @@ function renderHistorySection(): HTMLElement {
 
   const spacer = document.createElement('span');
   spacer.style.flex = '1';
+  clearBtn.style.marginLeft = '6px';
   headRow.append(title, spacer, saveBtn, clearBtn);
   wrap.appendChild(headRow);
 
