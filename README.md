@@ -2,6 +2,9 @@
 
 A VS Code extension for API testing, built around plain-JSON file formats that live in your repo
 next to the code they test — no proprietary collection format, no separate server, no account.
+
+📖 **[Documentation](https://g-akrp.github.io/albert-docs)**
+
 ## File types
 
 | Extension | What it is |
