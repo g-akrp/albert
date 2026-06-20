@@ -1,5 +1,6 @@
 import { ResolvedRequestPreview } from '../../model/types';
 import { buildCurlCommand } from '../curl';
+import { createCodeBlock } from './CodeBlock';
 
 /** Read-only block-style breakdown of a resolved request (variables already substituted) —
  *  used by the Preview tab and the Response > Request sub-tab / History entries. */
@@ -55,9 +56,7 @@ export function renderResolvedRequestBlocks(container: HTMLElement, preview: Res
   bodyTitle.textContent = `Body (${preview.body.mode})`;
   bodyBlock.appendChild(bodyTitle);
   if (preview.body.mode !== 'none' && preview.body.content) {
-    const pre = document.createElement('pre');
-    pre.textContent = preview.body.content;
-    bodyBlock.appendChild(pre);
+    bodyBlock.appendChild(createCodeBlock(preview.body.content, { copy: true }).element);
   } else {
     const empty = document.createElement('div');
     empty.className = 'akrp-empty';

@@ -25,6 +25,49 @@ type TabId = 'headers' | 'query' | 'body' | 'auth' | 'preview' | 'expect' | 'sch
 
 let activeTab: TabId = 'headers';
 
+/** Switch to the Response tab (e.g. when the user clicks Send). The caller re-renders. */
+export function showResponseTab(): void {
+  activeTab = 'response';
+}
+
+function isInvalidJson(text: string): boolean {
+  if (!text.trim()) return false;
+  try {
+    JSON.parse(text);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
+function hasJsSyntaxError(text: string): boolean {
+  if (!text.trim()) return false;
+  try {
+    // Compiles only — does not execute the script body.
+    new Function(text);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
+/** Whether a tab's editor currently holds a validation error, used to flag the tab. */
+function tabHasError(id: TabId): boolean {
+  const file = store.file;
+  switch (id) {
+    case 'body':
+      return file.request.body.mode === 'json' && isInvalidJson(file.request.body.content);
+    case 'schema':
+      return isInvalidJson(file.schemaValidation.schema);
+    case 'sample':
+      return isInvalidJson(file.sampleResponse);
+    case 'scripts':
+      return hasJsSyntaxError(file.scripts.preRequest) || hasJsSyntaxError(file.scripts.postResponse);
+    default:
+      return false;
+  }
+}
+
 // Monaco editor instances mounted by the currently rendered tab — disposed before every re-render
 // since renderTabs() rebuilds the DOM subtree from scratch and would otherwise orphan them.
 let mountedEditors: CodeEditorHandle[] = [];
@@ -86,6 +129,13 @@ export function renderTabs(container: HTMLElement): void {
       const el = document.createElement('div');
       el.className = 'akrp-tab' + (tab.id === activeTab ? ' active' : '');
       el.textContent = tab.label;
+      if (tabHasError(tab.id)) {
+        const warn = document.createElement('span');
+        warn.className = 'akrp-tab-warning';
+        warn.textContent = '⚠';
+        warn.title = 'This tab has a validation error';
+        el.appendChild(warn);
+      }
       el.onclick = () => {
         activeTab = tab.id;
         renderTabs(container);

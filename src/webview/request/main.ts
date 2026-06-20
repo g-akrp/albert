@@ -4,7 +4,7 @@ import { injectStyles } from '../styles';
 import { applyVariableLint } from '../lint/variableLint';
 import { attachVariableSuggestions } from '../lint/varSuggest';
 import { setWorkerBaseUri } from '../components/codeEditor';
-import { renderTabs } from './Tabs';
+import { renderTabs, showResponseTab } from './Tabs';
 import { store, vscodeApi } from './state';
 
 declare global {
@@ -109,7 +109,10 @@ function renderHeader(container: HTMLElement): void {
     sendBtn.onclick = () => store.cancelSend();
   } else {
     sendBtn.textContent = 'Send';
-    sendBtn.onclick = () => store.send();
+    sendBtn.onclick = () => {
+      showResponseTab();
+      store.send();
+    };
   }
 
   urlBar.append(methodSelect, endpointInput, pathInput, sendBtn);

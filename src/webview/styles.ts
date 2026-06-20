@@ -22,6 +22,7 @@ export function injectStyles(): void {
     .akrp-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--vscode-panel-border); margin-bottom: 8px; flex-wrap: wrap; align-items: stretch; }
     .akrp-tab { padding: 4px 10px; cursor: pointer; border-bottom: 2px solid transparent; }
     .akrp-tab.active { border-bottom-color: var(--vscode-focusBorder); }
+    .akrp-tab-warning { color: var(--vscode-editorError-foreground, #d9534f); margin-left: 4px; font-size: 11px; }
     .akrp-tab-section { padding: 4px 10px; font-weight: 600; font-size: 11px; text-transform: uppercase; color: var(--vscode-descriptionForeground); letter-spacing: 0.5px; align-self: center; pointer-events: none; user-select: none; }
     .akrp-kv-row { display: flex; gap: 4px; margin-bottom: 4px; align-items: center; }
     .akrp-kv-row input[type=text] { flex: 1; }
@@ -51,6 +52,10 @@ export function injectStyles(): void {
     .akrp-var-suggest { position: fixed; z-index: 1000; background: var(--vscode-editorSuggestWidget-background, var(--vscode-input-background)); border: 1px solid var(--vscode-editorSuggestWidget-border, var(--vscode-panel-border)); max-height: 160px; overflow-y: auto; font-size: 12px; }
     .akrp-var-suggest-item { padding: 3px 8px; cursor: pointer; white-space: nowrap; }
     .akrp-var-suggest-item:hover { background: var(--vscode-editorSuggestWidget-selectedBackground, var(--vscode-list-hoverBackground)); }
+    .akrp-codeblock { border: 1px solid var(--vscode-panel-border); border-radius: 4px; background: var(--vscode-textCodeBlock-background); margin-bottom: 8px; overflow: hidden; }
+    .akrp-codeblock-toolbar { display: flex; justify-content: flex-end; align-items: center; gap: 6px; padding: 4px 6px; border-bottom: 1px solid var(--vscode-panel-border); }
+    .akrp-codeblock-toolbar .akrp-copy-btn { padding: 2px 8px; font-size: 11px; }
+    .akrp-codeblock pre { margin: 0; padding: 8px 10px; overflow-x: auto; white-space: pre-wrap; word-break: break-word; font-family: var(--vscode-editor-font-family); font-size: 12px; }
   `;
   document.head.appendChild(style);
 }

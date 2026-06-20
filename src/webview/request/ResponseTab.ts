@@ -1,12 +1,16 @@
 import { SendResult } from '../../model/types';
 import { renderTestResults } from '../components/TestResults';
 import { renderResolvedRequestBlocks } from '../components/ResolvedRequestBlocks';
-import { formatResponseBody } from '../format';
+import { createCodeBlock } from '../components/CodeBlock';
+import { prettyJson, responseLooksJson } from '../format';
 import { store } from './state';
 
 type ResponseSubTabId = 'body' | 'headers' | 'tests' | 'request';
+type BodyFormat = 'json' | 'plaintext';
 
 let activeSubTab: ResponseSubTabId = 'body';
+// User's chosen response-body view; null means "auto" (pick by content-type on first render).
+let bodyFormat: BodyFormat | null = null;
 
 export function renderResponseTab(outerContainer: HTMLElement, container: HTMLElement): void {
   container.innerHTML = '';
@@ -86,35 +90,35 @@ function buildStatusBadge(result: SendResult): HTMLElement {
 
 function renderBodySubTab(container: HTMLElement): void {
   const result = store.lastResult!;
-  const formatted = formatResponseBody(result.body, result.headers);
+  if (bodyFormat === null) {
+    bodyFormat = responseLooksJson(result.body, result.headers) ? 'json' : 'plaintext';
+  }
 
-  const copyBtn = document.createElement('button');
-  copyBtn.textContent = 'Copy body';
-  copyBtn.className = 'secondary';
-  copyBtn.style.marginBottom = '8px';
-  copyBtn.onclick = () => {
-    navigator.clipboard.writeText(formatted).then(
-      () => {
-        copyBtn.textContent = 'Copied!';
-        setTimeout(() => (copyBtn.textContent = 'Copy body'), 1500);
-      },
-      (err) => console.error('[Albert] failed to copy response body', err)
-    );
+  const formatSelect = document.createElement('select');
+  for (const [value, label] of [['json', 'Pretty JSON'], ['plaintext', 'Plain text']] as const) {
+    const opt = document.createElement('option');
+    opt.value = value;
+    opt.textContent = label;
+    if (value === bodyFormat) opt.selected = true;
+    formatSelect.appendChild(opt);
+  }
+
+  const render = (fmt: BodyFormat): string => (fmt === 'json' ? prettyJson(result.body) : result.body);
+
+  const block = createCodeBlock(render(bodyFormat), { copy: true, toolbarExtra: formatSelect });
+  formatSelect.onchange = () => {
+    bodyFormat = formatSelect.value as BodyFormat;
+    block.setContent(render(bodyFormat));
   };
-  container.appendChild(copyBtn);
-
-  const pre = document.createElement('pre');
-  pre.textContent = formatted;
-  container.appendChild(pre);
+  container.appendChild(block.element);
 }
 
 function renderHeadersSubTab(container: HTMLElement): void {
   const result = store.lastResult!;
-  const pre = document.createElement('pre');
-  pre.textContent = Object.entries(result.headers)
+  const text = Object.entries(result.headers)
     .map(([k, v]) => `${k}: ${v}`)
     .join('\n');
-  container.appendChild(pre);
+  container.appendChild(createCodeBlock(text, { copy: true }).element);
 }
 
 function renderTestsSubTab(container: HTMLElement): void {
