@@ -1,0 +1,30 @@
+{
+  "akrpType": "request",
+  "akrpVersion": 1,
+  "name": "Get user by id",
+  "request": {
+    "method": "GET",
+    "endpoint": "{{baseUrl}}",
+    "path": "/users/{{userId}}",
+    "headers": [
+      { "name": "Accept", "value": "application/json", "enabled": true }
+    ],
+    "query": [],
+    "body": { "mode": "none", "content": "" },
+    "auth": { "type": "bearer", "bearer": { "token": "{{token}}" } }
+  },
+  "scripts": {
+    "preRequest": "console.log('fetching user', environment.get('userId'));\n",
+    "postResponse": "expect(response.status).toBe(200);\nconst u = response.json();\nexpect(u.id).toBe(1);\n"
+  },
+  "expectations": [
+    { "id": "e_status", "target": "status", "operator": "equals", "expected": "200" },
+    { "id": "e_name", "target": "body", "path": "name", "operator": "equals", "expected": "Ada Lovelace" },
+    { "id": "e_active", "target": "body", "path": "active", "operator": "equals", "expected": "true" }
+  ],
+  "schemaValidation": {
+    "enabled": true,
+    "schema": "{\n  \"type\": \"object\",\n  \"required\": [\"id\", \"name\", \"email\"],\n  \"properties\": {\n    \"id\": { \"type\": \"number\" },\n    \"name\": { \"type\": \"string\" },\n    \"email\": { \"type\": \"string\" },\n    \"active\": { \"type\": \"boolean\" }\n  }\n}"
+  },
+  "sampleResponse": "{\n  \"id\": 1,\n  \"name\": \"Ada Lovelace\",\n  \"email\": \"ada@example.com\",\n  \"active\": true\n}"
+}

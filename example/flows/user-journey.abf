@@ -1,0 +1,34 @@
+{
+  "akrpType": "flow",
+  "akrpVersion": 1,
+  "name": "User journey",
+  "steps": [
+    {
+      "id": "s_login",
+      "name": "Login",
+      "requestPath": "../requests/02-login.abrq",
+      "enabled": true,
+      "validate": true,
+      "captures": [
+        { "variable": "token", "source": "body", "path": "token" },
+        { "variable": "userId", "source": "body", "path": "user.id" }
+      ]
+    },
+    {
+      "id": "s_get",
+      "name": "Get the logged-in user",
+      "requestPath": "../requests/03-get-user.abrq",
+      "enabled": true,
+      "validate": true,
+      "captures": []
+    },
+    {
+      "id": "s_create",
+      "name": "Create a user",
+      "requestPath": "../requests/04-create-user.abrq",
+      "enabled": true,
+      "validate": true,
+      "captures": []
+    }
+  ]
+}

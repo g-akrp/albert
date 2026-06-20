@@ -1,0 +1,17 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/users"
+  },
+  "response": {
+    "status": 201,
+    "headers": { "Content-Type": "application/json" },
+    "jsonBody": {
+      "id": 99,
+      "name": "{{jsonPath request.body '$.name'}}",
+      "email": "{{jsonPath request.body '$.email'}}",
+      "created": true
+    },
+    "transformers": ["response-template"]
+  }
+}

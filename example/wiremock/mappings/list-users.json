@@ -1,0 +1,17 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/users"
+  },
+  "response": {
+    "status": 200,
+    "headers": { "Content-Type": "application/json" },
+    "jsonBody": {
+      "users": [
+        { "id": 1, "name": "Ada Lovelace", "email": "ada@example.com" },
+        { "id": 2, "name": "Alan Turing", "email": "alan@example.com" }
+      ],
+      "total": 2
+    }
+  }
+}

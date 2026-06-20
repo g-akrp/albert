@@ -1,0 +1,15 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/login"
+  },
+  "response": {
+    "status": 200,
+    "headers": { "Content-Type": "application/json" },
+    "jsonBody": {
+      "token": "mock-jwt-abc123",
+      "expiresIn": 3600,
+      "user": { "id": 1, "name": "Ada Lovelace" }
+    }
+  }
+}

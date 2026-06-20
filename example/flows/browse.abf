@@ -1,0 +1,15 @@
+{
+  "akrpType": "flow",
+  "akrpVersion": 1,
+  "name": "Browse users",
+  "steps": [
+    {
+      "id": "s_list",
+      "name": "List users",
+      "requestPath": "../requests/01-list-users.abrq",
+      "enabled": true,
+      "validate": true,
+      "captures": []
+    }
+  ]
+}

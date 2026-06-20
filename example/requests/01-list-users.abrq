@@ -1,0 +1,30 @@
+{
+  "akrpType": "request",
+  "akrpVersion": 1,
+  "name": "List users",
+  "request": {
+    "method": "GET",
+    "endpoint": "{{baseUrl}}",
+    "path": "/users",
+    "headers": [
+      { "name": "Accept", "value": "application/json", "enabled": true }
+    ],
+    "query": [
+      { "key": "limit", "format": "number", "value": "10", "enabled": true }
+    ],
+    "body": { "mode": "none", "content": "" },
+    "auth": { "type": "none" }
+  },
+  "scripts": {
+    "preRequest": "",
+    "postResponse": "expect(response.status).toBe(200);\nconst body = response.json();\nconsole.log('user count:', body.total);\n"
+  },
+  "expectations": [
+    { "id": "e_status", "target": "status", "operator": "equals", "expected": "200" },
+    { "id": "e_ct", "target": "header", "path": "content-type", "operator": "contains", "expected": "json" },
+    { "id": "e_total", "target": "body", "path": "total", "operator": "greaterThan", "expected": "0" },
+    { "id": "e_first", "target": "body", "path": "users[0].name", "operator": "exists", "expected": "" }
+  ],
+  "schemaValidation": { "enabled": false, "schema": "" },
+  "sampleResponse": "{\n  \"users\": [{ \"id\": 1, \"name\": \"Ada Lovelace\" }],\n  \"total\": 1\n}"
+}

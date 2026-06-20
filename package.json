@@ -2,7 +2,7 @@
   "name": "albert",
   "displayName": "Albert",
   "description": "API request files (.abrq) and environment configs (.abenv) with scripting, assertions, and AJV schema validation.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "publisher": "g-akrp",
   "engines": {
     "vscode": "^1.90.0"
@@ -280,5 +280,15 @@
   },
   "bin": {
     "albert": "./out/cli.js"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/g-akrp/albert.git"
+  },
+  "homepage": "https://github.com/g-akrp/albert#readme",
+  "bugs": {
+    "url": "https://github.com/g-akrp/albert/issues"
+  },
+  "license": "MIT",
+  "author": "Akarapon Oaksonsombat"
 }

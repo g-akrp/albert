@@ -1,0 +1,21 @@
+{
+  "priority": 1,
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/users/[0-9]+",
+    "headers": {
+      "Authorization": { "matches": "Bearer .+" }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": { "Content-Type": "application/json" },
+    "jsonBody": {
+      "id": 1,
+      "name": "Ada Lovelace",
+      "email": "ada@example.com",
+      "active": true,
+      "roles": ["admin"]
+    }
+  }
+}

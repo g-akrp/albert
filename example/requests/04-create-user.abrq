@@ -1,0 +1,28 @@
+{
+  "akrpType": "request",
+  "akrpVersion": 1,
+  "name": "Create user",
+  "request": {
+    "method": "POST",
+    "endpoint": "{{baseUrl}}",
+    "path": "/users",
+    "headers": [],
+    "query": [],
+    "body": {
+      "mode": "json",
+      "content": "{\n  \"name\": \"Grace Hopper\",\n  \"email\": \"grace@example.com\"\n}"
+    },
+    "auth": { "type": "bearer", "bearer": { "token": "{{token}}" } }
+  },
+  "scripts": {
+    "preRequest": "",
+    "postResponse": "expect(response.status).toBe(201);\n"
+  },
+  "expectations": [
+    { "id": "e_status", "target": "status", "operator": "equals", "expected": "201" },
+    { "id": "e_id", "target": "body", "path": "id", "operator": "exists", "expected": "" },
+    { "id": "e_created", "target": "body", "path": "created", "operator": "equals", "expected": "true" }
+  ],
+  "schemaValidation": { "enabled": false, "schema": "" },
+  "sampleResponse": "{\n  \"id\": 99,\n  \"name\": \"Grace Hopper\",\n  \"created\": true\n}"
+}

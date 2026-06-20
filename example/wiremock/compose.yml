@@ -1,0 +1,11 @@
+# WireMock mock API for the Albert examples. Serves http://localhost:8080.
+# Start:  podman-compose -f example/wiremock/compose.yml up   (or: docker compose -f ... up)
+# Stop:   Ctrl+C, then `... down`
+services:
+  wiremock:
+    image: docker.io/wiremock/wiremock:3.5.4
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./mappings:/home/wiremock/mappings
+    command: ["--global-response-templating", "--verbose"]
